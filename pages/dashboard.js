@@ -20,6 +20,7 @@ export default function Dashboard() {
   const [unit, setUnit]           = useState('metric')
   const [chartMode, setChartMode] = useState('dist')
   const [error, setError]         = useState('')
+  const [loadStatus, setLoadStatus] = useState('INITIALISIERE…')
 
   useEffect(() => {
     init()
@@ -27,15 +28,17 @@ export default function Dashboard() {
 
   async function init() {
     // Check auth
+    setLoadStatus('AUTHENTIFIZIERE…')
     const meRes = await fetch('/api/auth/me')
     if (!meRes.ok) { router.push('/'); return }
     const me = await meRes.json()
     setUser(me)
 
     // Load stored activities
+    setLoadStatus('LADE AKTIVITÄTEN…')
     const actRes = await fetch('/api/activities')
     if (actRes.ok) {
-      const { activities: acts, count } = await actRes.json()
+      const { activities: acts } = await actRes.json()
       setActivities(acts)
       if (acts.length > 0) {
         const years = [...new Set(acts.map(a => new Date(a.start_date).getFullYear()))].sort((a,b)=>b-a)
