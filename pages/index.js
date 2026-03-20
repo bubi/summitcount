@@ -2,15 +2,16 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
 import Link from 'next/link'
+import { initMountainBackground } from '../lib/mountainBackground'
 
 export default function LoginPage() {
   const router = useRouter()
   const { error } = router.query
 
   useEffect(() => {
-    fetch('/api/auth/me').then(r => {
-      if (r.ok) router.push('/dashboard')
-    })
+    fetch('/api/auth/me').then(r => { if (r.ok) router.push('/dashboard') })
+    const cleanup = initMountainBackground('mountain-bg')
+    return cleanup
   }, [])
 
   return (
@@ -21,42 +22,33 @@ export default function LoginPage() {
         <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
       </Head>
       <div className="page">
+        <canvas id="mountain-bg" className="mountain-canvas" />
         <div className="card">
           <div className="logo">SUMMIT<br/>COUNT</div>
           <p className="sub">Karoo · AXS · Strava</p>
-
           <div className="divider" />
-
           <p className="desc">
             Deine jährlichen Ride-Stats — Distanz, Höhenmeter, Zeit.<br/>
             Verbinde einmal, Daten bleiben gespeichert.
           </p>
-
-          {error && (
-            <div className="err">⚠ {decodeURIComponent(error)}</div>
-          )}
-
+          {error && <div className="err">⚠ {decodeURIComponent(error)}</div>}
           <a href="/api/auth/login" className="strava-btn">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
               <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/>
             </svg>
             Connect with Strava
           </a>
-
           <p className="fine">
             Nur Lesezugriff auf deine Aktivitäten.<br/>
             Keine Daten werden an Dritte weitergegeben.
           </p>
-
           <div className="footer-links">
-            <div className="powered">
-              <a href="https://www.strava.com" target="_blank" rel="noreferrer" className="powered-link">
-                <svg viewBox="0 0 24 24" width="12" height="12" fill="#FC4C02">
-                  <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/>
-                </svg>
-                Powered by Strava
-              </a>
-            </div>
+            <a href="https://www.strava.com" target="_blank" rel="noreferrer" className="powered-link">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="#FC4C02">
+                <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/>
+              </svg>
+              Powered by Strava
+            </a>
             <Link href="/privacy" className="privacy-link">Privacy Policy</Link>
           </div>
         </div>
@@ -68,11 +60,9 @@ export default function LoginPage() {
         #__next{min-height:100vh}
       `}</style>
       <style jsx>{`
-        .page{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0a0a0a;padding:24px;box-sizing:border-box}
-        .page::before{content:'';position:fixed;inset:0;
-          background-image:linear-gradient(rgba(232,255,71,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(232,255,71,.03) 1px,transparent 1px);
-          background-size:40px 40px;pointer-events:none}
-        .card{background:#111;border:1px solid #222;border-radius:12px;padding:48px 40px;text-align:center;max-width:400px;width:100%;position:relative;z-index:1}
+        .page{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0a0a0a;padding:24px;box-sizing:border-box;position:relative;}
+        .mountain-canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;}
+        .card{background:rgba(17,17,17,0.85);border:1px solid #222;border-radius:12px;padding:48px 40px;text-align:center;max-width:400px;width:100%;position:relative;z-index:1;backdrop-filter:blur(2px);}
         .logo{font-family:'Bebas Neue',sans-serif;font-size:3.5rem;letter-spacing:.04em;line-height:.9;color:#e8ff47;margin-bottom:8px}
         .sub{font-family:'DM Mono',monospace;font-size:.7rem;color:#555;letter-spacing:.15em;text-transform:uppercase}
         .divider{height:1px;background:#222;margin:28px 0}
@@ -82,7 +72,6 @@ export default function LoginPage() {
         .strava-btn:hover{background:#e04400;transform:translateY(-1px)}
         .fine{font-family:'DM Mono',monospace;font-size:.65rem;color:#444;margin-top:20px;line-height:1.6}
         .footer-links{margin-top:24px;padding-top:20px;border-top:1px solid #1a1a1a;display:flex;align-items:center;justify-content:space-between;gap:12px}
-        .powered{display:flex}
         .powered-link{display:inline-flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:.65rem;color:#444;text-decoration:none;transition:color .15s;letter-spacing:.05em}
         .powered-link:hover{color:#FC4C02}
         .privacy-link{font-family:'DM Mono',monospace;font-size:.65rem;color:#444;text-decoration:none;transition:color .15s;letter-spacing:.05em}

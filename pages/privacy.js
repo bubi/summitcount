@@ -1,7 +1,14 @@
+import { useEffect } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
+import { initMountainBackground } from '../lib/mountainBackground'
 
 export default function Privacy() {
+  useEffect(() => {
+    const cleanup = initMountainBackground('mountain-bg')
+    return cleanup
+  }, [])
+
   return (
     <>
       <Head>
@@ -11,8 +18,8 @@ export default function Privacy() {
       </Head>
 
       <div className="page">
+        <canvas id="mountain-bg" className="mountain-canvas" />
         <div className="wrap">
-
           <div className="header">
             <Link href="/" className="logo">SUMMIT<br/>COUNT</Link>
           </div>
@@ -88,13 +95,14 @@ export default function Privacy() {
               <p>We may update this policy from time to time. The date at the top of this page reflects the last update. Continued use of the app after changes constitutes acceptance of the updated policy.</p>
             </section>
 
-            <div className="powered">
+            <div className="footer-links">
               <a href="https://www.strava.com" target="_blank" rel="noreferrer" className="powered-link">
                 <svg viewBox="0 0 24 24" width="12" height="12" fill="#FC4C02">
                   <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/>
                 </svg>
                 Powered by Strava
               </a>
+              <Link href="/" className="back-link">← Zurück</Link>
             </div>
           </div>
         </div>
@@ -103,11 +111,11 @@ export default function Privacy() {
       <style jsx global>{`
         *{margin:0;padding:0;box-sizing:border-box}
         html,body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Sans',sans-serif}
-        body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(232,255,71,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(232,255,71,.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none}
       `}</style>
       <style jsx>{`
-        .page{min-height:100vh;padding:40px 24px}
-        .wrap{max-width:680px;margin:0 auto;position:relative;z-index:1}
+        .page{min-height:100vh;padding:40px 24px;position:relative;}
+        .mountain-canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;}
+        .wrap{max-width:680px;margin:0 auto;position:relative;z-index:1;}
         .header{margin-bottom:48px}
         .logo{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:.04em;line-height:.9;color:#e8ff47;text-decoration:none;display:inline-block}
         .logo:hover{opacity:.8}
@@ -122,9 +130,11 @@ export default function Privacy() {
         section a{color:#FC4C02;text-decoration:none}
         section a:hover{text-decoration:underline}
         section code{background:#1a1a1a;padding:2px 6px;border-radius:3px;font-family:'DM Mono',monospace;font-size:.8em;color:#e8ff47}
-        .powered{margin-top:48px;padding-top:24px;border-top:1px solid #1a1a1a;text-align:center}
-        .powered-link{display:inline-flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:.65rem;color:#333;text-decoration:none;transition:color .15s;letter-spacing:.1em;text-transform:uppercase}
+        .footer-links{margin-top:48px;padding-top:24px;border-top:1px solid #1a1a1a;display:flex;align-items:center;justify-content:space-between;}
+        .powered-link{display:inline-flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:.65rem;color:#444;text-decoration:none;transition:color .15s;letter-spacing:.08em;text-transform:uppercase}
         .powered-link:hover{color:#FC4C02}
+        .back-link{font-family:'DM Mono',monospace;font-size:.65rem;color:#444;text-decoration:none;transition:color .15s;letter-spacing:.08em;text-transform:uppercase}
+        .back-link:hover{color:#888}
       `}</style>
     </>
   )

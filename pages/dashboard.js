@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
 import Link from 'next/link'
+import { initMountainBackground } from '../lib/mountainBackground'
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 const fmtDist  = (m,u) => u==='metric' ? (m/1000).toFixed(1)+' km' : (m/1609.34).toFixed(1)+' mi'
@@ -34,8 +35,29 @@ export default function Dashboard() {
   const [chartMode, setChartMode]     = useState('dist')
   const [error, setError]             = useState('')
   const [loadStatus, setLoadStatus]   = useState('INITIALISIERE…')
+  const mountainCleanup               = useRef(null)
 
-  useEffect(() => { init() }, [])
+  useEffect(() => {
+    init()
+    // Start background — works for both loading and dashboard states
+    // We init after a tick so the canvas is in the DOM
+    const t = setTimeout(() => {
+      mountainCleanup.current = initMountainBackground('mountain-bg')
+    }, 50)
+    return () => {
+      clearTimeout(t)
+      if (mountainCleanup.current) mountainCleanup.current()
+    }
+  }, [])
+
+  // Re-init canvas when loading state changes (different DOM render)
+  useEffect(() => {
+    const t = setTimeout(() => {
+      if (mountainCleanup.current) mountainCleanup.current()
+      mountainCleanup.current = initMountainBackground('mountain-bg')
+    }, 50)
+    return () => clearTimeout(t)
+  }, [loading])
 
   async function init() {
     setLoadStatus('AUTHENTIFIZIERE…')
@@ -116,6 +138,7 @@ export default function Dashboard() {
         <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
       </Head>
       <div className="loading-page">
+        <canvas id="mountain-bg" className="mountain-canvas" />
         <div className="loading-inner">
           <div className="loading-logo">SUMMIT<br/>COUNT</div>
           <div className="loading-ring">
@@ -130,8 +153,9 @@ export default function Dashboard() {
       </div>
       <style jsx global>{`*{margin:0;padding:0;box-sizing:border-box}html,body,#__next{height:100%;background:#0a0a0a}`}</style>
       <style jsx>{`
-        .loading-page{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0a0a0a;background-image:linear-gradient(rgba(232,255,71,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(232,255,71,.03) 1px,transparent 1px);background-size:40px 40px}
-        .loading-inner{display:flex;flex-direction:column;align-items:center;gap:28px}
+        .loading-page{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0a0a0a;position:relative;}
+        .mountain-canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;}
+        .loading-inner{display:flex;flex-direction:column;align-items:center;gap:28px;position:relative;z-index:1;}
         .loading-logo{font-family:'Bebas Neue',sans-serif;font-size:2.8rem;letter-spacing:.04em;line-height:.9;color:#e8ff47;text-align:center}
         .loading-ring{display:flex;align-items:center;justify-content:center}
         .spin-circle{transform-origin:30px 30px;animation:spin 1.2s linear infinite}
@@ -148,6 +172,8 @@ export default function Dashboard() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
       </Head>
+
+      <canvas id="mountain-bg" className="mountain-canvas" />
 
       <div className="wrap">
         <div className="header">
@@ -204,15 +230,9 @@ export default function Dashboard() {
 
             {availableSports.length > 1 && (
               <div className="sport-nav">
-                <button
-                  className={selectedSports.length===0?'sp-btn active':'sp-btn'}
-                  onClick={()=>setSelectedSports([])}>
-                  Alle
-                </button>
+                <button className={selectedSports.length===0?'sp-btn active':'sp-btn'} onClick={()=>setSelectedSports([])}>Alle</button>
                 {availableSports.map(s=>(
-                  <button key={s}
-                    className={selectedSports.includes(s)?'sp-btn active':'sp-btn'}
-                    onClick={()=>toggleSport(s)}>
+                  <button key={s} className={selectedSports.includes(s)?'sp-btn active':'sp-btn'} onClick={()=>toggleSport(s)}>
                     {sportLabel(s)}
                   </button>
                 ))}
@@ -286,7 +306,6 @@ export default function Dashboard() {
               ))}
             </div>
 
-            {/* Footer */}
             <div className="app-footer">
               <a href="https://www.strava.com" target="_blank" rel="noreferrer" className="strava-footer-link">
                 <svg viewBox="0 0 24 24" width="12" height="12" fill="#FC4C02">
@@ -304,11 +323,11 @@ export default function Dashboard() {
         *{margin:0;padding:0;box-sizing:border-box}
         :root{--bg:#0a0a0a;--panel:#111;--border:#222;--accent:#e8ff47;--accent2:#ff6b35;--text:#f0f0f0;--muted:#555;--dim:#2a2a2a}
         body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh}
-        body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(232,255,71,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(232,255,71,.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
         @keyframes spin{to{transform:rotate(360deg)}}
       `}</style>
       <style jsx>{`
-        .wrap{max-width:960px;margin:0 auto;padding:40px 24px;position:relative;z-index:1}
+        .mountain-canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;}
+        .wrap{max-width:960px;margin:0 auto;padding:40px 24px;position:relative;z-index:1;}
         .header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:40px;gap:16px;flex-wrap:wrap}
         .logo-area h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(2.4rem,6vw,4rem);letter-spacing:.04em;line-height:.9;color:var(--accent)}
         .header-right{display:flex;flex-direction:column;align-items:flex-end;gap:12px;padding-top:4px}
@@ -329,22 +348,22 @@ export default function Dashboard() {
         .empty p{margin-bottom:20px;font-size:.9rem}
         .btn{background:var(--accent);color:#000;border:none;border-radius:4px;padding:10px 20px;font-family:'DM Sans',sans-serif;font-weight:500;font-size:.85rem;cursor:pointer}
         .year-nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
-        .yr-btn{font-family:'DM Mono',monospace;font-size:.75rem;padding:6px 14px;border-radius:3px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s}
+        .yr-btn{font-family:'DM Mono',monospace;font-size:.75rem;padding:6px 14px;border-radius:3px;border:1px solid var(--border);background:rgba(10,10,10,0.7);color:var(--muted);cursor:pointer;transition:all .15s}
         .yr-btn:hover{border-color:var(--accent);color:var(--accent)}
         .yr-btn.active{background:var(--accent);color:#000;border-color:var(--accent);font-weight:600}
         .sport-nav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:28px;padding-top:4px}
-        .sp-btn{font-family:'DM Mono',monospace;font-size:.68rem;padding:4px 12px;border-radius:3px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s;letter-spacing:.05em;text-transform:uppercase}
+        .sp-btn{font-family:'DM Mono',monospace;font-size:.68rem;padding:4px 12px;border-radius:3px;border:1px solid var(--border);background:rgba(10,10,10,0.7);color:var(--muted);cursor:pointer;transition:all .15s;letter-spacing:.05em;text-transform:uppercase}
         .sp-btn:hover{border-color:var(--accent2);color:var(--accent2)}
         .sp-btn.active{background:var(--accent2);color:#000;border-color:var(--accent2);font-weight:600}
         .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:28px}
-        .stat-card{background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:24px 20px;transition:border-color .2s;position:relative;overflow:hidden}
+        .stat-card{background:rgba(17,17,17,0.85);border:1px solid var(--border);border-radius:6px;padding:24px 20px;transition:border-color .2s;position:relative;overflow:hidden;backdrop-filter:blur(2px);}
         .stat-card:hover{border-color:var(--accent)}
         .stat-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--accent);transform:scaleX(0);transition:transform .3s;transform-origin:left}
         .stat-card:hover::after{transform:scaleX(1)}
         .stat-label{font-family:'DM Mono',monospace;font-size:.65rem;text-transform:uppercase;letter-spacing:.15em;color:var(--muted);margin-bottom:10px}
         .stat-value{font-family:'Bebas Neue',sans-serif;font-size:clamp(2rem,5vw,2.8rem);letter-spacing:.02em;line-height:1;color:var(--accent)}
         .stat-unit{font-family:'DM Mono',monospace;font-size:.75rem;color:var(--muted);margin-top:4px;letter-spacing:.1em}
-        .chart-box{background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:24px 20px 16px;margin-bottom:28px}
+        .chart-box{background:rgba(17,17,17,0.85);border:1px solid var(--border);border-radius:6px;padding:24px 20px 16px;margin-bottom:28px;backdrop-filter:blur(2px);}
         .section-title{font-family:'DM Mono',monospace;font-size:.7rem;text-transform:uppercase;letter-spacing:.15em;color:var(--muted);margin-bottom:14px}
         .chart-tabs{display:flex;gap:8px;margin-bottom:20px}
         .ct{font-family:'DM Mono',monospace;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;padding:4px 10px;border-radius:3px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s}
@@ -358,12 +377,12 @@ export default function Dashboard() {
         .bar.dist{background:var(--accent)}
         .bar.elev{background:var(--accent2)}
         .bar-label{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted);position:absolute;bottom:4px}
-        .rides-list{background:var(--panel);border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:28px}
+        .rides-list{background:rgba(17,17,17,0.85);border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:28px;backdrop-filter:blur(2px);}
         .rides-header{display:grid;grid-template-columns:1fr 90px 80px 80px 70px;gap:8px;padding:10px 18px;border-bottom:1px solid var(--dim);font-family:'DM Mono',monospace;font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);text-align:right}
         .rides-header span:first-child{text-align:left}
         .ride-row{display:grid;grid-template-columns:1fr 90px 80px 80px 70px;gap:8px;padding:12px 18px;border-bottom:1px solid var(--dim);align-items:center;transition:background .15s;text-align:right}
         .ride-row:last-child{border-bottom:none}
-        .ride-row:hover{background:var(--dim)}
+        .ride-row:hover{background:rgba(42,42,42,0.8)}
         .ride-name{font-size:.82rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left;color:var(--text);text-decoration:none;display:block}
         .ride-name:hover{color:var(--accent)}
         .ride-date{font-family:'DM Mono',monospace;font-size:.68rem;color:var(--muted);margin-top:2px;text-align:left}
