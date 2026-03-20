@@ -151,14 +151,6 @@ export default function Dashboard() {
         <div className="header">
           <div className="logo-area">
             <h1>ODO<br/>METER</h1>
-            <p>Karoo · AXS · Strava</p>
-          </div>
-          <div className="chips">
-            <span className="chip">Hammerhead</span>
-            <span className="chip">SRAM AXS</span>
-            <span className={`chip ${syncing?'syncing':'active'}`}>
-              {syncing ? '⟳ Syncing…' : 'via Strava'}
-            </span>
           </div>
         </div>
 
@@ -187,10 +179,6 @@ export default function Dashboard() {
             <button className="btn-sync" onClick={doSync} disabled={syncing}>
               {syncing ? '⟳' : '↻'} Sync
             </button>
-            <div className="unit-toggle">
-              <button className={unit==='metric'?'ut active':'ut'} onClick={()=>setUnit('metric')}>KM</button>
-              <button className={unit==='imperial'?'ut active':'ut'} onClick={()=>setUnit('imperial')}>MI</button>
-            </div>
             <a href="/api/auth/logout" className="btn-danger">Logout</a>
           </div>
         </div>
@@ -303,7 +291,7 @@ export default function Dashboard() {
         .user-name{font-family:'DM Mono',monospace;font-size:.8rem;color:var(--accent)}
         .user-sub{font-size:.72rem;color:var(--muted);margin-top:2px}
         .bar-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-        .sync-badge{font-family:'DM Mono',monospace;font-size:.65rem;color:#4caf50;padding:4px 8px;border:1px solid #4caf5044;border-radius:3px}
+        .sync-badge{font-family:'DM Mono',monospace;font-size:.78rem;color:#4caf50;padding:6px 12px;border:1px solid #4caf5044;border-radius:4px}
         .btn-sync{font-family:'DM Mono',monospace;font-size:.72rem;padding:6px 12px;border-radius:3px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s}
         .btn-sync:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
         .btn-sync:disabled{opacity:.4;cursor:default}
