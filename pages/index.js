@@ -50,8 +50,13 @@ export default function LoginPage() {
         </div>
       </div>
 
+      <style jsx global>{`
+        *{margin:0;padding:0;box-sizing:border-box}
+        html,body{height:100%;background:#0a0a0a}
+        #__next{min-height:100vh}
+      `}</style>
       <style jsx>{`
-        .page{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0a0a0a;padding:24px}
+        .page{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0a0a0a;padding:24px;box-sizing:border-box}
         .page::before{content:'';position:fixed;inset:0;
           background-image:linear-gradient(rgba(232,255,71,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(232,255,71,.03) 1px,transparent 1px);
           background-size:40px 40px;pointer-events:none}
