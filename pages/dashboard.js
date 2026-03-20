@@ -9,6 +9,17 @@ const fmtTime  = s => { const h=Math.floor(s/3600),m=Math.floor((s%3600)/60); re
 const fmtVal   = (m,u) => u==='metric' ? (m/1000).toFixed(1) : (m/1609.34).toFixed(1)
 const fmtElevV = (m,u) => u==='metric' ? Math.round(m) : Math.round(m*3.28084)
 
+const SPORT_LABELS = {
+  Ride:              'Ride',
+  VirtualRide:       'Virtual',
+  EBikeRide:         'E-Bike',
+  GravelRide:        'Gravel',
+  MountainBikeRide:  'MTB',
+  EMountainBikeRide: 'E-MTB',
+  Velomobile:        'Velo',
+}
+const sportLabel = t => SPORT_LABELS[t] || t || 'Ride'
+
 export default function Dashboard() {
   const router = useRouter()
   const [user, setUser]             = useState(null)
@@ -128,14 +139,12 @@ export default function Dashboard() {
 
       <div className="wrap">
 
-        {/* Header — Logo links, User + Actions rechts, auf gleicher Höhe */}
         <div className="header">
           <div className="logo-area">
             <h1>SUMMIT<br/>COUNT</h1>
           </div>
 
           <div className="header-right">
-            {/* User info */}
             <div className="user-info">
               {user?.profileImg
                 ? <img src={user.profileImg} className="avatar" alt="avatar" />
@@ -146,7 +155,6 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Actions */}
             <div className="actions">
               {syncInfo && !syncing && (
                 <span className="sync-badge">
@@ -183,10 +191,10 @@ export default function Dashboard() {
 
             <div className="stats-grid">
               {[
-                { label:'Total Distance',   value: fmtVal(totalDist,unit),                        unit: unit==='metric'?'KM':'MILES' },
-                { label:'Elevation Gained', value: fmtElevV(totalElev,unit).toLocaleString(),     unit: unit==='metric'?'METERS':'FEET' },
-                { label:'Total Ride Time',  value: fmtTime(totalTime),                            unit: 'HRS / MIN' },
-                { label:'Rides Completed',  value: yearRides.length,                              unit: 'ACTIVITIES' },
+                { label:'Total Distance',   value: fmtVal(totalDist,unit),                             unit: unit==='metric'?'KM':'MILES' },
+                { label:'Elevation Gained', value: fmtElevV(totalElev,unit).toLocaleString(),          unit: unit==='metric'?'METERS':'FEET' },
+                { label:'Total Ride Time',  value: fmtTime(totalTime),                                 unit: 'HRS / MIN' },
+                { label:'Rides Completed',  value: yearRides.length,                                   unit: 'ACTIVITIES' },
                 { label:'Avg Speed',        value: (unit==='metric'?avgSpeed:avgSpeed*.621).toFixed(1), unit: unit==='metric'?'KM/H':'MPH' },
                 { label:'Avg Distance',     value: yearRides.length>0?fmtVal(totalDist/yearRides.length,unit):'0', unit: unit==='metric'?'KM / RIDE':'MI / RIDE' },
               ].map(c=>(
@@ -239,7 +247,7 @@ export default function Dashboard() {
                   <div className="ride-val">{fmtDist(a.distance_m,unit)}</div>
                   <div className="ride-val">{fmtElev(a.elevation_gain_m,unit)}</div>
                   <div className="ride-val">{fmtTime(a.moving_time_s)}</div>
-                  <div><span className="ride-type">{(a.sport_type||'Ride').replace('EBikeRide','E-Bike').replace('VirtualRide','Virtual').slice(0,8)}</span></div>
+                  <div><span className="ride-type">{sportLabel(a.sport_type)}</span></div>
                 </div>
               ))}
             </div>
@@ -265,8 +273,6 @@ export default function Dashboard() {
       `}</style>
       <style jsx>{`
         .wrap{max-width:960px;margin:0 auto;padding:40px 24px;position:relative;z-index:1}
-
-        /* Header — logo links, user+actions rechts, bündig oben */
         .header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:40px;gap:16px;flex-wrap:wrap}
         .logo-area h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(2.4rem,6vw,4rem);letter-spacing:.04em;line-height:.9;color:var(--accent)}
         .header-right{display:flex;flex-direction:column;align-items:flex-end;gap:12px;padding-top:4px}
@@ -282,7 +288,6 @@ export default function Dashboard() {
         .btn-sync:disabled{opacity:.4;cursor:default}
         .btn-danger{background:transparent;color:#ff4444;border:1px solid #ff444444;border-radius:4px;padding:5px 10px;font-family:'DM Sans',sans-serif;font-size:.75rem;cursor:pointer;text-decoration:none;transition:all .15s}
         .btn-danger:hover{background:#ff4444;color:#fff;border-color:#ff4444}
-
         .err-box{background:rgba(255,68,68,.08);border:1px solid rgba(255,68,68,.3);border-radius:4px;padding:10px 14px;font-family:'DM Mono',monospace;font-size:.75rem;color:#ff6666;margin-bottom:20px}
         .empty{text-align:center;padding:60px 20px;color:var(--muted)}
         .empty p{margin-bottom:20px;font-size:.9rem}
