@@ -1,39 +1,55 @@
-# Cycling Odometer — Karoo / AXS / Strava
+# Cycling Odometer v2
 
-Yearly cycling stats dashboard — distance, elevation, ride time — powered by Strava API.
-Works with Hammerhead Karoo and SRAM AXS via Strava sync.
+Multi-user cycling stats dashboard mit Login, Datenspeicherung und Delta-Sync.
 
-## Deploy to Vercel (5 Minuten)
+## Stack
+- **Next.js** auf Vercel
+- **Supabase** (Postgres) für User + Aktivitäten
+- **Strava OAuth** als Login
+- **iron-session** für sichere Sessions
 
-### 1. Auf GitHub pushen
+## Setup
 
+### 1. Supabase einrichten
+1. Account auf [supabase.com](https://supabase.com) → New Project
+2. SQL Editor öffnen → Inhalt von `supabase-schema.sql` einfügen → Run
+3. Project Settings → API → URLs + Keys notieren
+
+### 2. Strava API App
+1. [strava.com/settings/api](https://www.strava.com/settings/api) → App erstellen
+2. Authorization Callback Domain: `deine-app.vercel.app`
+3. Client ID + Secret notieren
+
+### 3. Lokal entwickeln
 ```bash
-git init
-git add .
-git commit -m "initial"
-git remote add origin https://github.com/DEIN-USER/strava-odometer.git
-git push -u origin main
-```
-
-### 2. Auf Vercel deployen
-
-1. Geh zu [vercel.com](https://vercel.com) → New Project
-2. GitHub Repo importieren
-3. Deploy klicken — fertig!
-
-Deine URL: `https://strava-odometer-xxx.vercel.app`
-
-### 3. Strava API App konfigurieren
-
-1. Geh zu [strava.com/settings/api](https://www.strava.com/settings/api)
-2. **Authorization Callback Domain:** `strava-odometer-xxx.vercel.app` (deine Vercel URL, ohne https://)
-3. Client ID + Secret in der App eingeben → Mit Strava verbinden
-
-## Lokal entwickeln
-
-```bash
+cp .env.local.example .env.local
+# .env.local mit echten Werten befüllen
 npm install
 npm run dev
-# → http://localhost:3000
-# Callback Domain in Strava: localhost
 ```
+
+### 4. Auf Vercel deployen
+```bash
+git init && git add . && git commit -m "initial"
+git remote add origin https://github.com/USER/strava-odometer.git
+git push -u origin main
+```
+→ vercel.com → New Project → Import → Deploy
+
+### 5. Environment Variables in Vercel setzen
+Vercel Dashboard → Project → Settings → Environment Variables:
+```
+STRAVA_CLIENT_ID
+STRAVA_CLIENT_SECRET
+SUPABASE_URL
+SUPABASE_SERVICE_KEY
+NEXT_PUBLIC_SUPABASE_URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY
+NEXT_PUBLIC_APP_URL        → https://deine-app.vercel.app
+SESSION_SECRET             → openssl rand -base64 32
+```
+
+## Delta-Sync Logik
+- **Erster Login**: Alle Rides werden von Strava geholt und in Supabase gespeichert
+- **Folgende Logins**: Nur Rides seit `last_synced_at` werden nachgeladen
+- Token-Refresh läuft automatisch wenn der Access Token abläuft
