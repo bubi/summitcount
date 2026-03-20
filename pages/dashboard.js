@@ -66,10 +66,8 @@ export default function Dashboard() {
     setSyncing(false)
   }
 
-  // ── Derived ──────────────────────────────────────────────────────────────
   const yearRides = activities.filter(a => new Date(a.start_date).getFullYear() === year)
   const years = [...new Set(activities.map(a => new Date(a.start_date).getFullYear()))].sort((a,b)=>b-a)
-
   const totalDist = yearRides.reduce((s,a)=>s+(a.distance_m||0),0)
   const totalElev = yearRides.reduce((s,a)=>s+(a.elevation_gain_m||0),0)
   const totalTime = yearRides.reduce((s,a)=>s+(a.moving_time_s||0),0)
@@ -129,37 +127,42 @@ export default function Dashboard() {
       </Head>
 
       <div className="wrap">
+
+        {/* Header — Logo links, User + Actions rechts, auf gleicher Höhe */}
         <div className="header">
           <div className="logo-area">
             <h1>SUMMIT<br/>COUNT</h1>
           </div>
-        </div>
 
-        <div className="user-bar">
-          <div className="user-info">
-            {user?.profileImg
-              ? <img src={user.profileImg} className="avatar" alt="avatar" />
-              : <div className="avatar-ph">🚴</div>}
-            <div>
-              <div className="user-name">{user?.firstname} {user?.lastname}</div>
-              <div className="user-sub">{[user?.city, user?.country].filter(Boolean).join(', ')}</div>
+          <div className="header-right">
+            {/* User info */}
+            <div className="user-info">
+              {user?.profileImg
+                ? <img src={user.profileImg} className="avatar" alt="avatar" />
+                : <div className="avatar-ph">🚴</div>}
+              <div>
+                <div className="user-name">{user?.firstname} {user?.lastname}</div>
+                <div className="user-sub">{[user?.city, user?.country].filter(Boolean).join(', ')}</div>
+              </div>
             </div>
-          </div>
-          <div className="bar-right">
-            {syncInfo && !syncing && (
-              <span className="sync-badge">
-                {syncInfo.isFullSync
-                  ? `✓ ${syncInfo.synced} rides geladen`
-                  : [
-                      syncInfo.synced > 0 && `+${syncInfo.synced} neu`,
-                      syncInfo.deleted > 0 && `${syncInfo.deleted} gelöscht`,
-                    ].filter(Boolean).join(' · ') || '✓ Aktuell'}
-              </span>
-            )}
-            <button className="btn-sync" onClick={doSync} disabled={syncing}>
-              {syncing ? '⟳' : '↻'} Sync
-            </button>
-            <a href="/api/auth/logout" className="btn-danger">Logout</a>
+
+            {/* Actions */}
+            <div className="actions">
+              {syncInfo && !syncing && (
+                <span className="sync-badge">
+                  {syncInfo.isFullSync
+                    ? `✓ ${syncInfo.synced} rides geladen`
+                    : [
+                        syncInfo.synced > 0 && `+${syncInfo.synced} neu`,
+                        syncInfo.deleted > 0 && `${syncInfo.deleted} gelöscht`,
+                      ].filter(Boolean).join(' · ') || '✓ Aktuell'}
+                </span>
+              )}
+              <button className="btn-sync" onClick={doSync} disabled={syncing}>
+                {syncing ? '⟳' : '↻'} Sync
+              </button>
+              <a href="/api/auth/logout" className="btn-danger">Logout</a>
+            </div>
           </div>
         </div>
 
@@ -262,21 +265,24 @@ export default function Dashboard() {
       `}</style>
       <style jsx>{`
         .wrap{max-width:960px;margin:0 auto;padding:40px 24px;position:relative;z-index:1}
-        .header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:40px}
+
+        /* Header — logo links, user+actions rechts, bündig oben */
+        .header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:40px;gap:16px;flex-wrap:wrap}
         .logo-area h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(2.4rem,6vw,4rem);letter-spacing:.04em;line-height:.9;color:var(--accent)}
-        .user-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:12px}
-        .user-info{display:flex;align-items:center;gap:12px}
-        .avatar{width:42px;height:42px;border-radius:50%;border:2px solid var(--accent);object-fit:cover}
-        .avatar-ph{width:42px;height:42px;border-radius:50%;border:2px solid var(--accent);background:var(--dim);display:flex;align-items:center;justify-content:center;font-size:1.1rem}
-        .user-name{font-family:'DM Mono',monospace;font-size:.8rem;color:var(--accent)}
-        .user-sub{font-size:.72rem;color:var(--muted);margin-top:2px}
-        .bar-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-        .sync-badge{font-family:'DM Mono',monospace;font-size:.78rem;color:#4caf50;padding:6px 12px;border:1px solid #4caf5044;border-radius:4px}
-        .btn-sync{font-family:'DM Mono',monospace;font-size:.72rem;padding:6px 12px;border-radius:3px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s}
+        .header-right{display:flex;flex-direction:column;align-items:flex-end;gap:12px;padding-top:4px}
+        .user-info{display:flex;align-items:center;gap:10px}
+        .avatar{width:36px;height:36px;border-radius:50%;border:2px solid var(--accent);object-fit:cover}
+        .avatar-ph{width:36px;height:36px;border-radius:50%;border:2px solid var(--accent);background:var(--dim);display:flex;align-items:center;justify-content:center;font-size:1rem}
+        .user-name{font-family:'DM Mono',monospace;font-size:.78rem;color:var(--accent);text-align:right}
+        .user-sub{font-size:.68rem;color:var(--muted);margin-top:2px;text-align:right}
+        .actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+        .sync-badge{font-family:'DM Mono',monospace;font-size:.75rem;color:#4caf50;padding:5px 10px;border:1px solid #4caf5044;border-radius:4px}
+        .btn-sync{font-family:'DM Mono',monospace;font-size:.72rem;padding:5px 10px;border-radius:3px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s}
         .btn-sync:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
         .btn-sync:disabled{opacity:.4;cursor:default}
-        .btn-danger{background:transparent;color:#ff4444;border:1px solid #ff444444;border-radius:4px;padding:6px 12px;font-family:'DM Sans',sans-serif;font-size:.75rem;cursor:pointer;text-decoration:none;transition:all .15s}
+        .btn-danger{background:transparent;color:#ff4444;border:1px solid #ff444444;border-radius:4px;padding:5px 10px;font-family:'DM Sans',sans-serif;font-size:.75rem;cursor:pointer;text-decoration:none;transition:all .15s}
         .btn-danger:hover{background:#ff4444;color:#fff;border-color:#ff4444}
+
         .err-box{background:rgba(255,68,68,.08);border:1px solid rgba(255,68,68,.3);border-radius:4px;padding:10px 14px;font-family:'DM Mono',monospace;font-size:.75rem;color:#ff6666;margin-bottom:20px}
         .empty{text-align:center;padding:60px 20px;color:var(--muted)}
         .empty p{margin-bottom:20px;font-size:.9rem}
@@ -326,6 +332,8 @@ export default function Dashboard() {
           .rides-header>*:nth-child(4),.ride-row>*:nth-child(4),
           .rides-header>*:nth-child(5),.ride-row>*:nth-child(5){display:none}
           .bar-chart{height:100px}
+          .header-right{align-items:flex-start}
+          .user-name,.user-sub{text-align:left}
         }
       `}</style>
     </>
