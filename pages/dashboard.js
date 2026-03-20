@@ -140,9 +140,10 @@ export default function Dashboard() {
               <span className="sync-badge">
                 {syncInfo.isFullSync
                   ? `✓ ${syncInfo.synced} rides geladen`
-                  : syncInfo.synced > 0
-                  ? `✓ +${syncInfo.synced} neue rides`
-                  : '✓ Aktuell'}
+                  : [
+                      syncInfo.synced > 0 && `+${syncInfo.synced} neu`,
+                      syncInfo.deleted > 0 && `${syncInfo.deleted} gelöscht`,
+                    ].filter(Boolean).join(' · ') || '✓ Aktuell'}
               </span>
             )}
             <button className="btn-sync" onClick={doSync} disabled={syncing}>

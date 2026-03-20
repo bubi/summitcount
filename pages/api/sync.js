@@ -1,6 +1,6 @@
 import { supabaseAdmin } from '../../lib/supabase'
 import { getSession } from '../../lib/session'
-import { fetchActivitiesSince, refreshAccessToken } from '../../lib/strava'
+import { fetchActivitiesSince, fetchAllActivityIds, refreshAccessToken } from '../../lib/strava'
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end()
@@ -35,15 +35,16 @@ export default async function handler(req, res) {
       }).eq('id', session.userId)
     }
 
-    // 3. Delta: only fetch activities since last sync
     const afterTs = user.last_synced_at
       ? Math.floor(new Date(user.last_synced_at).getTime() / 1000)
-      : null  // null = full initial sync
-
+      : null
+    const isFullSync = !afterTs
     const syncStarted = new Date().toISOString()
+
+    // 3. Fetch new/updated activities since last sync
     const newActivities = await fetchActivitiesSince(accessToken, afterTs)
 
-    // 4. Upsert new activities into DB
+    // 4. Upsert new activities
     let inserted = 0
     if (newActivities.length > 0) {
       const rows = newActivities.map(a => ({
@@ -58,23 +59,43 @@ export default async function handler(req, res) {
         year:                 new Date(a.start_date).getFullYear(),
         month:                new Date(a.start_date).getMonth() + 1,
       }))
-
-      const { error: insertErr, count } = await db
+      const { error: insertErr } = await db
         .from('activities')
         .upsert(rows, { onConflict: 'strava_activity_id', ignoreDuplicates: false })
-        .select('id')
       if (insertErr) throw insertErr
       inserted = newActivities.length
     }
 
-    // 5. Update last_synced_at
+    // 5. Deletion check — runs every sync
+    //    Fetch all current IDs from Strava, compare with DB, delete orphans
+    let deleted = 0
+    const stravaIds = await fetchAllActivityIds(accessToken)
+    const stravaIdSet = new Set(stravaIds)
+
+    // Get all stored IDs for this user
+    const { data: storedRows, error: storedErr } = await db
+      .from('activities')
+      .select('id, strava_activity_id')
+      .eq('user_id', session.userId)
+    if (storedErr) throw storedErr
+
+    const toDelete = storedRows
+      .filter(r => !stravaIdSet.has(r.strava_activity_id))
+      .map(r => r.id)
+
+    if (toDelete.length > 0) {
+      const { error: delErr } = await db
+        .from('activities')
+        .delete()
+        .in('id', toDelete)
+      if (delErr) throw delErr
+      deleted = toDelete.length
+    }
+
+    // 6. Update last_synced_at
     await db.from('users').update({ last_synced_at: syncStarted }).eq('id', session.userId)
 
-    res.json({
-      synced: inserted,
-      isFullSync: !afterTs,
-      lastSyncedAt: syncStarted,
-    })
+    res.json({ synced: inserted, deleted, isFullSync, lastSyncedAt: syncStarted })
   } catch (e) {
     console.error('Sync error:', e)
     res.status(500).json({ error: e.message })
