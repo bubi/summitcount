@@ -1,5 +1,5 @@
 {
-  "name": "strava-odometer",
+  "name": "summitcount",
   "version": "2.0.0",
   "scripts": {
     "dev": "next dev",

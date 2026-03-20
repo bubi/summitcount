@@ -11,7 +11,6 @@ export default async function handler(req, res) {
   const db = supabaseAdmin()
 
   try {
-    // 1. Load user tokens from DB
     const { data: user, error: userErr } = await db
       .from('users')
       .select('access_token, refresh_token, token_expires_at, last_synced_at')
@@ -19,7 +18,6 @@ export default async function handler(req, res) {
       .single()
     if (userErr) throw userErr
 
-    // 2. Refresh token if expired
     let accessToken = user.access_token
     if (Date.now() / 1000 > user.token_expires_at - 300) {
       const refreshed = await refreshAccessToken(
@@ -41,10 +39,8 @@ export default async function handler(req, res) {
     const isFullSync = !afterTs
     const syncStarted = new Date().toISOString()
 
-    // 3. Fetch new/updated activities since last sync
     const newActivities = await fetchActivitiesSince(accessToken, afterTs)
 
-    // 4. Upsert new activities
     let inserted = 0
     if (newActivities.length > 0) {
       const rows = newActivities.map(a => ({
@@ -66,13 +62,10 @@ export default async function handler(req, res) {
       inserted = newActivities.length
     }
 
-    // 5. Deletion check — runs every sync
-    //    Fetch all current IDs from Strava, compare with DB, delete orphans
     let deleted = 0
     const stravaIds = await fetchAllActivityIds(accessToken)
     const stravaIdSet = new Set(stravaIds)
 
-    // Get all stored IDs for this user
     const { data: storedRows, error: storedErr } = await db
       .from('activities')
       .select('id, strava_activity_id')
@@ -92,7 +85,6 @@ export default async function handler(req, res) {
       deleted = toDelete.length
     }
 
-    // 6. Update last_synced_at
     await db.from('users').update({ last_synced_at: syncStarted }).eq('id', session.userId)
 
     res.json({ synced: inserted, deleted, isFullSync, lastSyncedAt: syncStarted })
