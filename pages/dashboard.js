@@ -22,16 +22,17 @@ const sportLabel = t => SPORT_LABELS[t] || t || 'Ride'
 
 export default function Dashboard() {
   const router = useRouter()
-  const [user, setUser]             = useState(null)
-  const [activities, setActivities] = useState([])
-  const [loading, setLoading]       = useState(true)
-  const [syncing, setSyncing]       = useState(false)
-  const [syncInfo, setSyncInfo]     = useState(null)
-  const [year, setYear]             = useState(new Date().getFullYear())
-  const [unit, setUnit]             = useState('metric')
-  const [chartMode, setChartMode]   = useState('dist')
-  const [error, setError]           = useState('')
-  const [loadStatus, setLoadStatus] = useState('INITIALISIERE…')
+  const [user, setUser]               = useState(null)
+  const [activities, setActivities]   = useState([])
+  const [loading, setLoading]         = useState(true)
+  const [syncing, setSyncing]         = useState(false)
+  const [syncInfo, setSyncInfo]       = useState(null)
+  const [year, setYear]               = useState(new Date().getFullYear())
+  const [selectedSports, setSelectedSports] = useState([]) // empty = all
+  const [unit, setUnit]               = useState('metric')
+  const [chartMode, setChartMode]     = useState('dist')
+  const [error, setError]             = useState('')
+  const [loadStatus, setLoadStatus]   = useState('INITIALISIERE…')
 
   useEffect(() => { init() }, [])
 
@@ -39,8 +40,7 @@ export default function Dashboard() {
     setLoadStatus('AUTHENTIFIZIERE…')
     const meRes = await fetch('/api/auth/me')
     if (!meRes.ok) { router.push('/'); return }
-    const me = await meRes.json()
-    setUser(me)
+    setUser(await meRes.json())
 
     setLoadStatus('LADE AKTIVITÄTEN…')
     const actRes = await fetch('/api/activities')
@@ -77,15 +77,31 @@ export default function Dashboard() {
     setSyncing(false)
   }
 
+  function toggleSport(sport) {
+    setSelectedSports(prev =>
+      prev.includes(sport) ? prev.filter(s => s !== sport) : [...prev, sport]
+    )
+  }
+
+  // ── Derived ───────────────────────────────────────────────────────────────
   const yearRides = activities.filter(a => new Date(a.start_date).getFullYear() === year)
   const years = [...new Set(activities.map(a => new Date(a.start_date).getFullYear()))].sort((a,b)=>b-a)
-  const totalDist = yearRides.reduce((s,a)=>s+(a.distance_m||0),0)
-  const totalElev = yearRides.reduce((s,a)=>s+(a.elevation_gain_m||0),0)
-  const totalTime = yearRides.reduce((s,a)=>s+(a.moving_time_s||0),0)
+
+  // All sport types present in this year
+  const availableSports = [...new Set(yearRides.map(a => a.sport_type).filter(Boolean))].sort()
+
+  // Filtered rides — if nothing selected show all
+  const filteredRides = selectedSports.length === 0
+    ? yearRides
+    : yearRides.filter(a => selectedSports.includes(a.sport_type))
+
+  const totalDist = filteredRides.reduce((s,a)=>s+(a.distance_m||0),0)
+  const totalElev = filteredRides.reduce((s,a)=>s+(a.elevation_gain_m||0),0)
+  const totalTime = filteredRides.reduce((s,a)=>s+(a.moving_time_s||0),0)
   const avgSpeed  = totalTime>0 ? totalDist/totalTime*3.6 : 0
 
   const monthly = MONTHS.map((_,i) => {
-    const rides = yearRides.filter(a => new Date(a.start_date).getMonth()===i)
+    const rides = filteredRides.filter(a => new Date(a.start_date).getMonth()===i)
     return {
       dist:  rides.reduce((s,a)=>s+(a.distance_m||0),0),
       elev:  rides.reduce((s,a)=>s+(a.elevation_gain_m||0),0),
@@ -94,7 +110,7 @@ export default function Dashboard() {
   })
   const chartVals = monthly.map(m => chartMode==='dist'?m.dist/1000 : chartMode==='elev'?m.elev : m.count)
   const chartMax  = Math.max(...chartVals, 1)
-  const sortedRides = [...yearRides].sort((a,b)=>new Date(b.start_date)-new Date(a.start_date))
+  const sortedRides = [...filteredRides].sort((a,b)=>new Date(b.start_date)-new Date(a.start_date))
 
   if (loading) return (
     <>
@@ -143,7 +159,6 @@ export default function Dashboard() {
           <div className="logo-area">
             <h1>SUMMIT<br/>COUNT</h1>
           </div>
-
           <div className="header-right">
             <div className="user-info">
               {user?.profileImg
@@ -154,7 +169,6 @@ export default function Dashboard() {
                 <div className="user-sub">{[user?.city, user?.country].filter(Boolean).join(', ')}</div>
               </div>
             </div>
-
             <div className="actions">
               {syncInfo && !syncing && (
                 <span className="sync-badge">
@@ -183,20 +197,44 @@ export default function Dashboard() {
           </div>
         ) : (
           <>
+            {/* Jahr-Filter */}
             <div className="year-nav">
               {years.map(y=>(
-                <button key={y} className={y===year?'yr-btn active':'yr-btn'} onClick={()=>setYear(y)}>{y}</button>
+                <button key={y}
+                  className={y===year?'yr-btn active':'yr-btn'}
+                  onClick={()=>{ setYear(y); setSelectedSports([]) }}>
+                  {y}
+                </button>
               ))}
             </div>
 
+            {/* Sport-Filter */}
+            {availableSports.length > 1 && (
+              <div className="sport-nav">
+                <button
+                  className={selectedSports.length===0?'sp-btn active':'sp-btn'}
+                  onClick={()=>setSelectedSports([])}>
+                  Alle
+                </button>
+                {availableSports.map(s=>(
+                  <button key={s}
+                    className={selectedSports.includes(s)?'sp-btn active':'sp-btn'}
+                    onClick={()=>toggleSport(s)}>
+                    {sportLabel(s)}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Stats */}
             <div className="stats-grid">
               {[
                 { label:'Total Distance',   value: fmtVal(totalDist,unit),                             unit: unit==='metric'?'KM':'MILES' },
                 { label:'Elevation Gained', value: fmtElevV(totalElev,unit).toLocaleString(),          unit: unit==='metric'?'METERS':'FEET' },
                 { label:'Total Ride Time',  value: fmtTime(totalTime),                                 unit: 'HRS / MIN' },
-                { label:'Rides Completed',  value: yearRides.length,                                   unit: 'ACTIVITIES' },
+                { label:'Rides Completed',  value: filteredRides.length,                               unit: 'ACTIVITIES' },
                 { label:'Avg Speed',        value: (unit==='metric'?avgSpeed:avgSpeed*.621).toFixed(1), unit: unit==='metric'?'KM/H':'MPH' },
-                { label:'Avg Distance',     value: yearRides.length>0?fmtVal(totalDist/yearRides.length,unit):'0', unit: unit==='metric'?'KM / RIDE':'MI / RIDE' },
+                { label:'Avg Distance',     value: filteredRides.length>0?fmtVal(totalDist/filteredRides.length,unit):'0', unit: unit==='metric'?'KM / RIDE':'MI / RIDE' },
               ].map(c=>(
                 <div key={c.label} className="stat-card">
                   <div className="stat-label">{c.label}</div>
@@ -206,6 +244,7 @@ export default function Dashboard() {
               ))}
             </div>
 
+            {/* Chart */}
             <div className="chart-box">
               <div className="section-title">Monthly Breakdown</div>
               <div className="chart-tabs">
@@ -232,7 +271,12 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="section-title">All Rides — {sortedRides.length} activities</div>
+            {/* Rides */}
+            <div className="section-title">
+              {selectedSports.length > 0
+                ? `${selectedSports.map(sportLabel).join(', ')} — ${sortedRides.length} activities`
+                : `All Rides — ${sortedRides.length} activities`}
+            </div>
             <div className="rides-list">
               <div className="rides-header">
                 <span>Activity</span><span>Dist</span><span>Elev</span><span>Time</span><span>Type</span>
@@ -292,10 +336,19 @@ export default function Dashboard() {
         .empty{text-align:center;padding:60px 20px;color:var(--muted)}
         .empty p{margin-bottom:20px;font-size:.9rem}
         .btn{background:var(--accent);color:#000;border:none;border-radius:4px;padding:10px 20px;font-family:'DM Sans',sans-serif;font-weight:500;font-size:.85rem;cursor:pointer}
-        .year-nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px}
+
+        /* Jahr-Filter */
+        .year-nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
         .yr-btn{font-family:'DM Mono',monospace;font-size:.75rem;padding:6px 14px;border-radius:3px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s}
         .yr-btn:hover{border-color:var(--accent);color:var(--accent)}
         .yr-btn.active{background:var(--accent);color:#000;border-color:var(--accent);font-weight:600}
+
+        /* Sport-Filter */
+        .sport-nav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:28px;padding-top:4px}
+        .sp-btn{font-family:'DM Mono',monospace;font-size:.68rem;padding:4px 12px;border-radius:3px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s;letter-spacing:.05em;text-transform:uppercase}
+        .sp-btn:hover{border-color:var(--accent2);color:var(--accent2)}
+        .sp-btn.active{background:var(--accent2);color:#000;border-color:var(--accent2);font-weight:600}
+
         .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:28px}
         .stat-card{background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:24px 20px;transition:border-color .2s;position:relative;overflow:hidden}
         .stat-card:hover{border-color:var(--accent)}
