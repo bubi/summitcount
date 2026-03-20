@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
+import Link from 'next/link'
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 const fmtDist  = (m,u) => u==='metric' ? (m/1000).toFixed(1)+' km' : (m/1609.34).toFixed(1)+' mi'
@@ -28,7 +29,7 @@ export default function Dashboard() {
   const [syncing, setSyncing]         = useState(false)
   const [syncInfo, setSyncInfo]       = useState(null)
   const [year, setYear]               = useState(new Date().getFullYear())
-  const [selectedSports, setSelectedSports] = useState([]) // empty = all
+  const [selectedSports, setSelectedSports] = useState([])
   const [unit, setUnit]               = useState('metric')
   const [chartMode, setChartMode]     = useState('dist')
   const [error, setError]             = useState('')
@@ -83,14 +84,9 @@ export default function Dashboard() {
     )
   }
 
-  // ── Derived ───────────────────────────────────────────────────────────────
   const yearRides = activities.filter(a => new Date(a.start_date).getFullYear() === year)
   const years = [...new Set(activities.map(a => new Date(a.start_date).getFullYear()))].sort((a,b)=>b-a)
-
-  // All sport types present in this year
   const availableSports = [...new Set(yearRides.map(a => a.sport_type).filter(Boolean))].sort()
-
-  // Filtered rides — if nothing selected show all
   const filteredRides = selectedSports.length === 0
     ? yearRides
     : yearRides.filter(a => selectedSports.includes(a.sport_type))
@@ -154,7 +150,6 @@ export default function Dashboard() {
       </Head>
 
       <div className="wrap">
-
         <div className="header">
           <div className="logo-area">
             <h1>SUMMIT<br/>COUNT</h1>
@@ -197,7 +192,6 @@ export default function Dashboard() {
           </div>
         ) : (
           <>
-            {/* Jahr-Filter */}
             <div className="year-nav">
               {years.map(y=>(
                 <button key={y}
@@ -208,7 +202,6 @@ export default function Dashboard() {
               ))}
             </div>
 
-            {/* Sport-Filter */}
             {availableSports.length > 1 && (
               <div className="sport-nav">
                 <button
@@ -226,7 +219,6 @@ export default function Dashboard() {
               </div>
             )}
 
-            {/* Stats */}
             <div className="stats-grid">
               {[
                 { label:'Total Distance',   value: fmtVal(totalDist,unit),                             unit: unit==='metric'?'KM':'MILES' },
@@ -244,7 +236,6 @@ export default function Dashboard() {
               ))}
             </div>
 
-            {/* Chart */}
             <div className="chart-box">
               <div className="section-title">Monthly Breakdown</div>
               <div className="chart-tabs">
@@ -271,7 +262,6 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Rides */}
             <div className="section-title">
               {selectedSports.length > 0
                 ? `${selectedSports.map(sportLabel).join(', ')} — ${sortedRides.length} activities`
@@ -296,13 +286,15 @@ export default function Dashboard() {
               ))}
             </div>
 
-            <div className="strava-footer">
+            {/* Footer */}
+            <div className="app-footer">
               <a href="https://www.strava.com" target="_blank" rel="noreferrer" className="strava-footer-link">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="#FC4C02">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="#FC4C02">
                   <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/>
                 </svg>
                 Powered by Strava
               </a>
+              <Link href="/privacy" className="privacy-footer-link">Privacy Policy</Link>
             </div>
           </>
         )}
@@ -336,19 +328,14 @@ export default function Dashboard() {
         .empty{text-align:center;padding:60px 20px;color:var(--muted)}
         .empty p{margin-bottom:20px;font-size:.9rem}
         .btn{background:var(--accent);color:#000;border:none;border-radius:4px;padding:10px 20px;font-family:'DM Sans',sans-serif;font-weight:500;font-size:.85rem;cursor:pointer}
-
-        /* Jahr-Filter */
         .year-nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
         .yr-btn{font-family:'DM Mono',monospace;font-size:.75rem;padding:6px 14px;border-radius:3px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s}
         .yr-btn:hover{border-color:var(--accent);color:var(--accent)}
         .yr-btn.active{background:var(--accent);color:#000;border-color:var(--accent);font-weight:600}
-
-        /* Sport-Filter */
         .sport-nav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:28px;padding-top:4px}
         .sp-btn{font-family:'DM Mono',monospace;font-size:.68rem;padding:4px 12px;border-radius:3px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s;letter-spacing:.05em;text-transform:uppercase}
         .sp-btn:hover{border-color:var(--accent2);color:var(--accent2)}
         .sp-btn.active{background:var(--accent2);color:#000;border-color:var(--accent2);font-weight:600}
-
         .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:28px}
         .stat-card{background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:24px 20px;transition:border-color .2s;position:relative;overflow:hidden}
         .stat-card:hover{border-color:var(--accent)}
@@ -382,9 +369,11 @@ export default function Dashboard() {
         .ride-date{font-family:'DM Mono',monospace;font-size:.68rem;color:var(--muted);margin-top:2px;text-align:left}
         .ride-val{font-family:'DM Mono',monospace;font-size:.78rem}
         .ride-type{font-family:'DM Mono',monospace;font-size:.62rem;padding:2px 7px;border-radius:2px;background:var(--dim);color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
-        .strava-footer{text-align:center;padding:32px 0 8px}
-        .strava-footer-link{display:inline-flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:.68rem;color:#444;text-decoration:none;letter-spacing:.1em;text-transform:uppercase;transition:color .15s}
+        .app-footer{display:flex;align-items:center;justify-content:space-between;padding:32px 0 8px;border-top:1px solid #1a1a1a;margin-top:8px}
+        .strava-footer-link{display:inline-flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:.65rem;color:#444;text-decoration:none;letter-spacing:.08em;text-transform:uppercase;transition:color .15s}
         .strava-footer-link:hover{color:#FC4C02}
+        .privacy-footer-link{font-family:'DM Mono',monospace;font-size:.65rem;color:#444;text-decoration:none;letter-spacing:.08em;text-transform:uppercase;transition:color .15s}
+        .privacy-footer-link:hover{color:#888}
         @media(max-width:600px){
           .rides-header,.ride-row{grid-template-columns:1fr 80px 70px}
           .rides-header>*:nth-child(4),.ride-row>*:nth-child(4),

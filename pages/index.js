@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
+import Link from 'next/link'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -47,13 +48,16 @@ export default function LoginPage() {
             Keine Daten werden an Dritte weitergegeben.
           </p>
 
-          <div className="powered">
-            <a href="https://www.strava.com" target="_blank" rel="noreferrer" className="powered-link">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="#FC4C02">
-                <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/>
-              </svg>
-              Powered by Strava
-            </a>
+          <div className="footer-links">
+            <div className="powered">
+              <a href="https://www.strava.com" target="_blank" rel="noreferrer" className="powered-link">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="#FC4C02">
+                  <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/>
+                </svg>
+                Powered by Strava
+              </a>
+            </div>
+            <Link href="/privacy" className="privacy-link">Privacy Policy</Link>
           </div>
         </div>
       </div>
@@ -77,9 +81,12 @@ export default function LoginPage() {
         .strava-btn{display:inline-flex;align-items:center;gap:10px;background:#FC4C02;color:#fff;border:none;border-radius:6px;padding:14px 28px;font-family:'DM Sans',sans-serif;font-weight:600;font-size:.95rem;cursor:pointer;text-decoration:none;transition:all .15s;width:100%;justify-content:center}
         .strava-btn:hover{background:#e04400;transform:translateY(-1px)}
         .fine{font-family:'DM Mono',monospace;font-size:.65rem;color:#444;margin-top:20px;line-height:1.6}
-        .powered{margin-top:24px;padding-top:20px;border-top:1px solid #1a1a1a}
-        .powered-link{display:inline-flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:.65rem;color:#444;text-decoration:none;transition:color .15s}
+        .footer-links{margin-top:24px;padding-top:20px;border-top:1px solid #1a1a1a;display:flex;align-items:center;justify-content:space-between;gap:12px}
+        .powered{display:flex}
+        .powered-link{display:inline-flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:.65rem;color:#444;text-decoration:none;transition:color .15s;letter-spacing:.05em}
         .powered-link:hover{color:#FC4C02}
+        .privacy-link{font-family:'DM Mono',monospace;font-size:.65rem;color:#444;text-decoration:none;transition:color .15s;letter-spacing:.05em}
+        .privacy-link:hover{color:#888}
       `}</style>
     </>
   )
