@@ -95,9 +95,44 @@ export default function Dashboard() {
   const sortedRides = [...yearRides].sort((a,b)=>new Date(b.start_date)-new Date(a.start_date))
 
   if (loading) return (
-    <div className="loading-page">
-      <div className="spinner" /><p>Laden…</p>
-    </div>
+    <>
+      <Head>
+        <title>Cycling Odometer</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+      </Head>
+      <div className="loading-page">
+        <div className="loading-inner">
+          <div className="loading-logo">ODO<br/>METER</div>
+          <div className="loading-ring">
+            <svg viewBox="0 0 60 60" width="60" height="60">
+              <circle cx="30" cy="30" r="26" fill="none" stroke="#222" strokeWidth="3"/>
+              <circle cx="30" cy="30" r="26" fill="none" stroke="#e8ff47" strokeWidth="3"
+                strokeLinecap="round" strokeDasharray="40 124" className="spin-circle"/>
+            </svg>
+          </div>
+          <div className="loading-status">{loadStatus || 'INITIALISIERE…'}</div>
+        </div>
+      </div>
+      <style jsx global>{`
+        *{margin:0;padding:0;box-sizing:border-box}
+        html,body,#__next{height:100%;background:#0a0a0a}
+      `}</style>
+      <style jsx>{`
+        .loading-page{
+          min-height:100vh;display:flex;align-items:center;justify-content:center;
+          background:#0a0a0a;
+          background-image:linear-gradient(rgba(232,255,71,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(232,255,71,.03) 1px,transparent 1px);
+          background-size:40px 40px;
+        }
+        .loading-inner{display:flex;flex-direction:column;align-items:center;gap:28px}
+        .loading-logo{font-family:'Bebas Neue',sans-serif;font-size:2.8rem;letter-spacing:.04em;line-height:.9;color:#e8ff47;text-align:center}
+        .loading-ring{position:relative;display:flex;align-items:center;justify-content:center}
+        .spin-circle{transform-origin:30px 30px;animation:spin 1.2s linear infinite}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .loading-status{font-family:'DM Mono',monospace;font-size:.68rem;letter-spacing:.15em;text-transform:uppercase;color:#555}
+      `}</style>
+    </>
   )
 
   return (
