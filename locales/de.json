@@ -50,6 +50,10 @@
   "empty.message": "Keine Rides gefunden. Sync läuft beim ersten Laden automatisch.",
   "empty.syncButton": "Jetzt synchronisieren →",
 
+  "paesse.label": "Pässe & Berge",
+  "paesse.button": "⛰ Pässe & Berge",
+  "paesse.empty": "Keine Pässe & Berge gefunden. Füge Notizen im Format \"Name (ele m) | quäldich-Type\" zu deinen Aktivitäten hinzu.",
+
   "footer.privacy": "Datenschutz",
 
   "date.locale": "de-AT"

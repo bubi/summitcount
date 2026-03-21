@@ -204,7 +204,7 @@ export default function Dashboard() {
     { label: t('stat.avgDistance'),     value: filteredRides.length>0?fmtVal(currAvgDist,unit):'0', unit: isMetric?t('stat.unit.kmRide'):t('stat.unit.miRide'),
       delta: hasPrevYear&&prevAvgDist>0 ? calcDelta(currAvgDist,prevAvgDist) : null,
       formatAbs: v => fmtVal(v,unit)+(isMetric?' km':' mi') },
-    { label: 'Pässe & Berge',            value: climbCount,                                           unit: '',
+    { label: t('paesse.label'),           value: climbCount,                                           unit: '',
       delta: null,
       formatAbs: v => Math.round(v) },
   ]
@@ -337,7 +337,7 @@ export default function Dashboard() {
               <div className="sp-right-group">
                 <button className={view==='rides'&&selectedSports.length===0?'sp-btn active':'sp-btn'} onClick={()=>{setView('rides');setSelectedSports([])}}>🚴 Fahrten</button>
                 <button className={view==='paesse'?'sp-btn active':'sp-btn'} onClick={()=>setView('paesse')}>
-                  ⛰ Pässe & Berge {climbCount > 0 ? `(${climbCount})` : ''}
+                  {t('paesse.button')} {climbCount > 0 ? `(${climbCount})` : ''}
                 </button>
               </div>
             </div>
@@ -445,7 +445,7 @@ export default function Dashboard() {
               </div>
             </>) : (<>
               <div className="section-title" style={{display:'flex',alignItems:'center',gap:'12px'}}>
-                <span>Pässe & Berge — {climbCount}</span>
+                <span>{t('paesse.label')} — {climbCount}</span>
                 {user?.userId !== 'demo' && (
                   <div className="title-sync-wrap">
                     {titleSync.status === 'idle' && (
@@ -465,7 +465,7 @@ export default function Dashboard() {
               <div className="rides-list">
                 {climbData.current.climbs.length === 0 ? (
                   <div className="summit-empty">
-                    <p>Keine Pässe & Berge gefunden. Füge Notizen im Format "Name (ele m) | quäldich-Type" zu deinen Aktivitäten hinzu.</p>
+                    <p>{t('paesse.empty')}</p>
                   </div>
                 ) : (<>
                   <div className="summit-header">
