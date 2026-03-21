@@ -1,6 +1,5 @@
 import { useEffect } from 'react'
 import Head from 'next/head'
-import Link from 'next/link'
 import { initMountainBackground } from '../lib/mountainBackground'
 
 export default function Privacy() {
@@ -21,7 +20,7 @@ export default function Privacy() {
         <canvas id="mountain-bg" className="mountain-canvas" />
         <div className="wrap">
           <div className="header">
-            <Link href="/" className="logo">SUMMIT<br/>COUNT</Link>
+            <a href="/" className="logo">SUMMIT<br/>COUNT</a>
           </div>
 
           <div className="content">
@@ -102,7 +101,7 @@ export default function Privacy() {
                 </svg>
                 Powered by Strava
               </a>
-              <Link href="/" className="back-link">← Zurück</Link>
+              <a href="/" className="back-link">← Zurück</a>
             </div>
           </div>
         </div>
