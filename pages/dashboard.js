@@ -195,8 +195,8 @@ export default function Dashboard() {
     { label: t('stat.totalTime'),       value: fmtTime(totalTime),                                  unit: t('stat.unit.hrsMin'),
       delta: hasPrevYear ? calcDelta(totalTime,prevTotalTime) : null,
       formatAbs: v => fmtTime(v) },
-    { label: t('stat.rides'),           value: filteredRides.length,                                unit: t('stat.unit.activities'),
-      delta: hasPrevYear ? calcDelta(filteredRides.length,prevFiltered.length) : null,
+    { label: t('stat.rides'),           value: filteredRides.length,                                unit: '',
+      delta: null,
       formatAbs: v => Math.round(v) },
     { label: t('stat.avgSpeed'),        value: (isMetric?avgSpeed:avgSpeed*.621).toFixed(1),        unit: isMetric?t('stat.unit.kmh'):t('stat.unit.mph'),
       delta: hasPrevYear ? calcDelta(isMetric?avgSpeed:avgSpeed*.621, isMetric?prevAvgSpeed:prevAvgSpeed*.621) : null,
@@ -204,7 +204,7 @@ export default function Dashboard() {
     { label: t('stat.avgDistance'),     value: filteredRides.length>0?fmtVal(currAvgDist,unit):'0', unit: isMetric?t('stat.unit.kmRide'):t('stat.unit.miRide'),
       delta: hasPrevYear&&prevAvgDist>0 ? calcDelta(currAvgDist,prevAvgDist) : null,
       formatAbs: v => fmtVal(v,unit)+(isMetric?' km':' mi') },
-    { label: 'Pässe & Berge',            value: climbCount,                                           unit: 'quäldich',
+    { label: 'Pässe & Berge',            value: climbCount,                                           unit: '',
       delta: prevClimbCount>0 ? calcDelta(climbCount,prevClimbCount) : null,
       formatAbs: v => Math.round(v) },
   ]
@@ -450,7 +450,7 @@ export default function Dashboard() {
                   <div className="title-sync-wrap">
                     {titleSync.status === 'idle' && (
                       <button className="title-sync-btn" onClick={doTitleSync}>
-                        ⛰ quäldich sync
+                        ⛰ Sync
                       </button>
                     )}
                     {titleSync.status === 'syncing' && (
@@ -465,7 +465,7 @@ export default function Dashboard() {
               <div className="rides-list">
                 {climbData.current.climbs.length === 0 ? (
                   <div className="summit-empty">
-                    <p>Keine quäldich-Einträge gefunden. quäldich muss Aktivitäten mit Notizen versehen haben.</p>
+                    <p>Keine Pässe & Berge gefunden. Füge Notizen im Format "Name (ele m) | quäldich-Type" zu deinen Aktivitäten hinzu.</p>
                   </div>
                 ) : (<>
                   <div className="summit-header">
