@@ -1,7 +1,8 @@
 import { supabaseAdmin } from '../../lib/supabase'
 import { getSession } from '../../lib/session'
-import { fetchActivitiesSince, fetchAllActivityIds, refreshAccessToken } from '../../lib/strava'
+import { fetchActivitiesSince, fetchAllActivityIds, fetchActivity, refreshAccessToken } from '../../lib/strava'
 import { detectSummits } from '../../lib/summits'
+import { parseQualdichClimbs } from '../../lib/qualdich'
 
 const REAL_SPORT_TYPES = ['Ride','EBikeRide','GravelRide','MountainBikeRide','EMountainBikeRide']
 
@@ -66,6 +67,45 @@ export default async function handler(req, res) {
         .upsert(rows, { onConflict: 'strava_activity_id', ignoreDuplicates: false })
       if (insertErr) throw insertErr
       inserted = newActivities.length
+
+      // Fetch descriptions + quäldich climb extraction for new activities
+      for (const a of newActivities) {
+        try {
+          const detail = await fetchActivity(a.id, accessToken)
+          const description = detail.description || null
+          // Update description in DB
+          await db.from('activities')
+            .update({ description })
+            .eq('strava_activity_id', String(a.id))
+            .eq('user_id', session.userId)
+
+          // Parse quäldich climbs
+          const climbs = parseQualdichClimbs(description)
+          if (climbs.length > 0) {
+            // Get the DB UUID for this activity
+            const { data: dbAct } = await db
+              .from('activities')
+              .select('id, start_date')
+              .eq('strava_activity_id', String(a.id))
+              .single()
+            if (dbAct) {
+              const climbRows = climbs.map(c => ({
+                activity_id: dbAct.id,
+                name:        c.name,
+                ele:         c.ele,
+                climb_type:  c.climb_type,
+                visited_at:  dbAct.start_date,
+              }))
+              await db.from('qualdich_climbs')
+                .upsert(climbRows, { onConflict: 'activity_id,name', ignoreDuplicates: false })
+            }
+          }
+        } catch (e) {
+          console.warn('Description fetch failed for', a.id, e.message)
+        }
+        // Strava rate limit: pace requests
+        await new Promise(r => setTimeout(r, 250))
+      }
 
       // Summit detection for real outdoor rides with GPS
       const withPolyline = newActivities.filter(a =>
