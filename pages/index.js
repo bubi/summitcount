@@ -20,12 +20,6 @@ export default function LoginPage() {
       <div className="page">
         <div className="card">
           <div className="logo">SUMMIT<br/>COUNT</div>
-          <p className="sub">Karoo · AXS · Strava</p>
-          <div className="divider" />
-          <p className="desc">
-            Deine jährlichen Ride-Stats — Distanz, Höhenmeter, Zeit.<br/>
-            Verbinde einmal, Daten bleiben gespeichert.
-          </p>
           {error && <div className="err">⚠ {decodeURIComponent(error)}</div>}
           <a href="/api/auth/login" className="strava-btn">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
