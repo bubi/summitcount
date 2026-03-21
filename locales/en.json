@@ -19,7 +19,7 @@
   "stat.totalDistance": "Total Distance",
   "stat.elevationGained": "Elevation Gained",
   "stat.totalTime": "Total Ride Time",
-  "stat.rides": "Rides Completed",
+  "stat.rides": "Activities",
   "stat.avgSpeed": "Avg Speed",
   "stat.avgDistance": "Avg Distance",
   "stat.unit.km": "KM",
