@@ -205,7 +205,7 @@ export default function Dashboard() {
       delta: hasPrevYear&&prevAvgDist>0 ? calcDelta(currAvgDist,prevAvgDist) : null,
       formatAbs: v => fmtVal(v,unit)+(isMetric?' km':' mi') },
     { label: 'Pässe & Berge',            value: climbCount,                                           unit: '',
-      delta: prevClimbCount>0 ? calcDelta(climbCount,prevClimbCount) : null,
+      delta: null,
       formatAbs: v => Math.round(v) },
   ]
 
