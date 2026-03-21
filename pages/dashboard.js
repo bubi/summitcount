@@ -402,7 +402,7 @@ export default function Dashboard() {
         .app-footer{display:flex;align-items:center;justify-content:space-between;padding:32px 0 8px;border-top:1px solid #1a1a1a;margin-top:8px}
         .strava-footer-link{display:inline-flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:.65rem;color:#444;text-decoration:none;letter-spacing:.08em;text-transform:uppercase;transition:color .15s}
         .strava-footer-link:hover{color:#FC4C02}
-        .privacy-footer-link{font-family:'DM Mono',monospace;font-size:.65rem;color:#444;text-decoration:none;letter-spacing:.08em;text-transform:uppercase;transition:color .15s}
+        .privacy-footer-link{font-family:'DM Mono',monospace;font-size:.72rem;color:#555;text-decoration:none;letter-spacing:.08em;text-transform:uppercase;transition:color .15s}
         .privacy-footer-link:hover{color:#888}
         @media(max-width:600px){
           .rides-header,.ride-row{grid-template-columns:1fr 80px 70px}
