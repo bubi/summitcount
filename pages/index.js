@@ -50,7 +50,7 @@ export default function LoginPage() {
               </svg>
               Powered by Strava
             </a>
-            <Link href="/privacy" className="privacy-link">Privacy Policy</Link>
+            <a href="/privacy" className="privacy-link">Privacy Policy</a>
           </div>
         </div>
       </div>
@@ -77,7 +77,7 @@ export default function LoginPage() {
         .footer-links{margin-top:24px;padding-top:20px;border-top:1px solid #1a1a1a;display:flex;align-items:center;justify-content:space-between;gap:12px}
         .powered-link{display:inline-flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:.65rem;color:#444;text-decoration:none;transition:color .15s;letter-spacing:.05em}
         .powered-link:hover{color:#FC4C02}
-        .privacy-link{font-family:'DM Mono',monospace;font-size:.65rem;color:#444;text-decoration:none;transition:color .15s;letter-spacing:.05em}
+        .privacy-link{font-family:'DM Mono',monospace;font-size:.72rem;color:#555;text-decoration:none;transition:color .15s;letter-spacing:.08em;text-transform:uppercase}
         .privacy-link:hover{color:#888}
       `}</style>
     </>

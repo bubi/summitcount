@@ -313,7 +313,7 @@ export default function Dashboard() {
                 </svg>
                 Powered by Strava
               </a>
-              <Link href="/privacy" className="privacy-footer-link">Privacy Policy</Link>
+              <a href="/privacy" className="privacy-footer-link">Privacy Policy</a>
             </div>
           </>
         )}
