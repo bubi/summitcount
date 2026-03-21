@@ -59,6 +59,7 @@ export default function Dashboard() {
   const [climbData, setClimbData]     = useState({ current: { total: 0, climbs: [] }, previous: { total: 0 } })
   const [view, setView]               = useState('rides') // 'rides' | 'paesse'
   const [titleSync, setTitleSync]     = useState({ status: 'idle', result: null })
+  const [expandedClimb, setExpandedClimb] = useState(null)
 
   useEffect(() => { init() }, [])
   useEffect(() => { if (!loading) { fetchSummits(year); fetchClimbs(year) } }, [year, loading])
@@ -223,7 +224,6 @@ export default function Dashboard() {
       <Head>
         <title>SummitCount</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
       </Head>
       <div className="loading-page">
         <div className="loading-inner">
@@ -436,15 +436,44 @@ export default function Dashboard() {
                     <span>Besuche</span>
                     <span>Zuletzt</span>
                   </div>
-                  {climbData.current.climbs.map((c,i)=>(
-                    <div key={i} className="summit-row">
-                      <div className="summit-name">{c.name}</div>
-                      <div className="ride-val">{c.ele ? c.ele+' m' : '—'}</div>
-                      <div><span className="ride-type">{c.climb_type || 'Passjagd'}</span></div>
-                      <div className="ride-val">{c.visit_count}×</div>
-                      <div className="ride-val">{c.last_visited ? new Date(c.last_visited).toLocaleDateString(t('date.locale'),{day:'2-digit',month:'short',year:'numeric'}) : '—'}</div>
-                    </div>
-                  ))}
+                  {climbData.current.climbs.map((c,i)=>{
+                    const isOpen = expandedClimb === c.name
+                    return (
+                      <div key={i}>
+                        <div
+                          className={`summit-row climb-row${isOpen?' climb-row-open':''}`}
+                          onClick={()=>setExpandedClimb(isOpen ? null : c.name)}
+                        >
+                          <div className="summit-name">
+                            <span className="climb-chevron">{isOpen?'▾':'▸'}</span>
+                            {c.name}
+                          </div>
+                          <div className="ride-val">{c.ele ? c.ele+' m' : '—'}</div>
+                          <div><span className="ride-type">{c.climb_type || 'Passjagd'}</span></div>
+                          <div className="ride-val">{c.visit_count}×</div>
+                          <div className="ride-val">{c.last_visited ? new Date(c.last_visited).toLocaleDateString(t('date.locale'),{day:'2-digit',month:'short',year:'numeric'}) : '—'}</div>
+                        </div>
+                        {isOpen && (
+                          <div className="climb-rides">
+                            {c.rides.map((r,j)=>(
+                              <a
+                                key={j}
+                                href={`https://www.strava.com/activities/${r.strava_activity_id}`}
+                                target="_blank" rel="noreferrer"
+                                className="climb-ride-row"
+                              >
+                                <span className="climb-ride-name">{r.name}</span>
+                                <span className="climb-ride-meta">{new Date(r.start_date).toLocaleDateString(t('date.locale'),{day:'2-digit',month:'short',year:'numeric'})}</span>
+                                <span className="climb-ride-meta">{fmtDist(r.distance_m, unit)}</span>
+                                <span className="climb-ride-meta">{fmtElev(r.elevation_gain_m, unit)}</span>
+                                <span className="climb-ride-strava">↗ Strava</span>
+                              </a>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
                 </>)}
               </div>
             </>)}
@@ -555,6 +584,16 @@ export default function Dashboard() {
         .summit-row:hover{background:rgba(42,42,42,0.8)}
         .summit-name{font-size:.82rem;font-weight:500;text-align:left;color:var(--text)}
         .summit-empty{padding:40px 18px;text-align:center;font-family:'DM Mono',monospace;font-size:.75rem;color:var(--muted)}
+        .climb-row{cursor:pointer;user-select:none}
+        .climb-row:hover{background:rgba(255,255,255,0.04)}
+        .climb-row-open{background:rgba(255,255,255,0.03)}
+        .climb-chevron{font-size:.65rem;margin-right:6px;color:var(--muted);display:inline-block;width:10px}
+        .climb-rides{border-bottom:1px solid var(--dim)}
+        .climb-ride-row{display:grid;grid-template-columns:1fr 110px 80px 70px 60px;gap:8px;padding:9px 18px 9px 32px;background:rgba(0,0,0,0.25);border-top:1px solid var(--dim);align-items:center;text-decoration:none;transition:background .12s}
+        .climb-ride-row:hover{background:rgba(252,76,2,0.08)}
+        .climb-ride-name{font-size:.78rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .climb-ride-meta{font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted);text-align:right}
+        .climb-ride-strava{font-family:'DM Mono',monospace;font-size:.65rem;color:#FC4C02;text-align:right;opacity:.8}
         .app-footer{display:flex;align-items:center;justify-content:space-between;padding:32px 0 8px;border-top:1px solid #1a1a1a;margin-top:8px}
         .strava-footer-link{display:inline-flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:.65rem;color:#444;text-decoration:none;letter-spacing:.08em;text-transform:uppercase;transition:color .15s}
         .strava-footer-link:hover{color:#FC4C02}
