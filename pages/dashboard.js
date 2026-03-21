@@ -414,12 +414,14 @@ export default function Dashboard() {
                       className={`ride-row${hasClimbs?' ride-row-expandable':''}${isOpen?' ride-row-open':''}`}
                       onClick={hasClimbs ? ()=>setExpandedRide(isOpen?null:a.id) : undefined}
                     >
-                      <div>
-                        {hasClimbs && <span className="ride-chevron">{isOpen?'▾':'▸'}</span>}
-                        <a href={`https://www.strava.com/activities/${a.strava_activity_id}`}
-                          target="_blank" rel="noreferrer" className="ride-name"
-                          onClick={e=>e.stopPropagation()}>{a.name}</a>
-                        <div className="ride-date">{new Date(a.start_date).toLocaleDateString(t('date.locale'),{day:'2-digit',month:'short',year:'numeric'})}</div>
+                      <div className="ride-name-cell">
+                        <div className="ride-name-row">
+                          {hasClimbs && <span className="ride-chevron">{isOpen?'▾':'▸'}</span>}
+                          <a href={`https://www.strava.com/activities/${a.strava_activity_id}`}
+                            target="_blank" rel="noreferrer" className="ride-name"
+                            onClick={e=>e.stopPropagation()}>{a.name}</a>
+                          <span className="ride-date-inline">{new Date(a.start_date).toLocaleDateString(t('date.locale'),{day:'2-digit',month:'short',year:'numeric'})}</span>
+                        </div>
                       </div>
                       <div className="ride-val">{fmtDist(a.distance_m,unit)}</div>
                       <div className="ride-val">{fmtElev(a.elevation_gain_m,unit)}</div>
@@ -609,7 +611,10 @@ export default function Dashboard() {
         .ride-climb-type{font-family:'DM Mono',monospace;font-size:.62rem;padding:2px 7px;border-radius:2px;background:var(--dim);color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
         .ride-row:last-child{border-bottom:none}
         .ride-row:hover{background:rgba(42,42,42,0.8)}
-        .ride-name{font-size:.82rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left;color:var(--text);text-decoration:none;display:block}
+        .ride-name-cell{overflow:hidden}
+        .ride-name-row{display:flex;align-items:baseline;gap:8px;overflow:hidden}
+        .ride-name{font-size:.82rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left;color:var(--text);text-decoration:none;flex-shrink:1}
+        .ride-date-inline{font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted);white-space:nowrap;flex-shrink:0}
         .ride-name:hover{color:var(--accent)}
         .ride-date{font-family:'DM Mono',monospace;font-size:.68rem;color:var(--muted);margin-top:2px;text-align:left}
         .ride-val{font-family:'DM Mono',monospace;font-size:.78rem}
