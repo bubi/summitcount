@@ -60,6 +60,7 @@ export default function Dashboard() {
   const [view, setView]               = useState('rides') // 'rides' | 'paesse'
   const [titleSync, setTitleSync]     = useState({ status: 'idle', result: null })
   const [expandedClimb, setExpandedClimb] = useState(null)
+  const [expandedRide,  setExpandedRide]  = useState(null)
 
   useEffect(() => { init() }, [])
   useEffect(() => { if (!loading) { fetchSummits(year); fetchClimbs(year) } }, [year, loading])
@@ -173,6 +174,16 @@ export default function Dashboard() {
   const prevSummitCount = summitData.previous.total
   const climbCount      = climbData.current.total
   const prevClimbCount  = climbData.previous.total
+
+  // Map: strava_activity_id → climbs for quick lookup in rides list
+  const climbsByActivity = {}
+  for (const climb of climbData.current.climbs) {
+    for (const ride of climb.rides || []) {
+      const sid = ride.strava_activity_id
+      if (!climbsByActivity[sid]) climbsByActivity[sid] = []
+      climbsByActivity[sid].push({ name: climb.name, ele: climb.ele, climb_type: climb.climb_type })
+    }
+  }
 
   const stats = [
     { label: t('stat.totalDistance'),   value: fmtVal(totalDist,unit),                              unit: isMetric?t('stat.unit.km'):t('stat.unit.miles'),
@@ -393,19 +404,42 @@ export default function Dashboard() {
                   <span>{t('rides.col.time')}</span>
                   <span>{t('rides.col.type')}</span>
                 </div>
-                {sortedRides.map(a=>(
-                  <div key={a.id} className="ride-row">
-                    <div>
-                      <a href={`https://www.strava.com/activities/${a.strava_activity_id}`}
-                        target="_blank" rel="noreferrer" className="ride-name">{a.name}</a>
-                      <div className="ride-date">{new Date(a.start_date).toLocaleDateString(t('date.locale'),{day:'2-digit',month:'short',year:'numeric'})}</div>
+                {sortedRides.map(a=>{
+                  const actClimbs = climbsByActivity[a.strava_activity_id] || []
+                  const hasClimbs = actClimbs.length > 0
+                  const isOpen    = expandedRide === a.id
+                  return (
+                  <div key={a.id}>
+                    <div
+                      className={`ride-row${hasClimbs?' ride-row-expandable':''}${isOpen?' ride-row-open':''}`}
+                      onClick={hasClimbs ? ()=>setExpandedRide(isOpen?null:a.id) : undefined}
+                    >
+                      <div>
+                        {hasClimbs && <span className="ride-chevron">{isOpen?'▾':'▸'}</span>}
+                        <a href={`https://www.strava.com/activities/${a.strava_activity_id}`}
+                          target="_blank" rel="noreferrer" className="ride-name"
+                          onClick={e=>e.stopPropagation()}>{a.name}</a>
+                        <div className="ride-date">{new Date(a.start_date).toLocaleDateString(t('date.locale'),{day:'2-digit',month:'short',year:'numeric'})}</div>
+                      </div>
+                      <div className="ride-val">{fmtDist(a.distance_m,unit)}</div>
+                      <div className="ride-val">{fmtElev(a.elevation_gain_m,unit)}</div>
+                      <div className="ride-val">{fmtTime(a.moving_time_s)}</div>
+                      <div><span className="ride-type">{sportLabel(a.sport_type)}</span></div>
                     </div>
-                    <div className="ride-val">{fmtDist(a.distance_m,unit)}</div>
-                    <div className="ride-val">{fmtElev(a.elevation_gain_m,unit)}</div>
-                    <div className="ride-val">{fmtTime(a.moving_time_s)}</div>
-                    <div><span className="ride-type">{sportLabel(a.sport_type)}</span></div>
+                    {isOpen && hasClimbs && (
+                      <div className="ride-climbs">
+                        {actClimbs.map((c,i)=>(
+                          <div key={i} className="ride-climb-row">
+                            <span className="ride-climb-name">⛰ {c.name}</span>
+                            <span className="ride-climb-meta">{c.ele ? c.ele+' m' : '—'}</span>
+                            <span className="ride-climb-type">{c.climb_type || 'Passjagd'}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                ))}
+                  )
+                })}
               </div>
             </>) : (<>
               <div className="section-title" style={{display:'flex',alignItems:'center',gap:'12px'}}>
@@ -564,6 +598,15 @@ export default function Dashboard() {
         .rides-header{display:grid;grid-template-columns:1fr 90px 80px 80px 70px;gap:8px;padding:10px 18px;border-bottom:1px solid var(--dim);font-family:'DM Mono',monospace;font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);text-align:right}
         .rides-header span:first-child{text-align:left}
         .ride-row{display:grid;grid-template-columns:1fr 90px 80px 80px 70px;gap:8px;padding:12px 18px;border-bottom:1px solid var(--dim);align-items:center;transition:background .15s;text-align:right}
+        .ride-row-expandable{cursor:pointer}
+        .ride-row-expandable:hover{background:rgba(255,255,255,0.04)}
+        .ride-row-open{background:rgba(255,255,255,0.03);border-bottom:none}
+        .ride-chevron{font-size:.6rem;color:var(--muted);margin-right:5px}
+        .ride-climbs{border-bottom:1px solid var(--dim);background:rgba(0,0,0,0.2)}
+        .ride-climb-row{display:flex;align-items:center;gap:12px;padding:7px 18px 7px 32px;border-top:1px solid var(--dim)}
+        .ride-climb-name{font-size:.78rem;color:var(--text);flex:1}
+        .ride-climb-meta{font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted);min-width:55px;text-align:right}
+        .ride-climb-type{font-family:'DM Mono',monospace;font-size:.62rem;padding:2px 7px;border-radius:2px;background:var(--dim);color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
         .ride-row:last-child{border-bottom:none}
         .ride-row:hover{background:rgba(42,42,42,0.8)}
         .ride-name{font-size:.82rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left;color:var(--text);text-decoration:none;display:block}
