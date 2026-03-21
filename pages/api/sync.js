@@ -55,6 +55,7 @@ export default async function handler(req, res) {
         start_date:          a.start_date,
         distance_m:          a.distance || 0,
         elevation_gain_m:    a.total_elevation_gain || 0,
+        elev_high:           a.elev_high ?? null,
         moving_time_s:       a.moving_time || 0,
         year:                new Date(a.start_date).getFullYear(),
         month:               new Date(a.start_date).getMonth() + 1,
@@ -75,13 +76,13 @@ export default async function handler(req, res) {
         const stravaIds = withPolyline.map(a => String(a.id))
         const { data: dbRows } = await db
           .from('activities')
-          .select('id, strava_activity_id, start_date, summary_polyline')
+          .select('id, strava_activity_id, start_date, summary_polyline, elev_high')
           .in('strava_activity_id', stravaIds)
 
         for (const dbRow of dbRows || []) {
           if (!dbRow.summary_polyline) continue
           try {
-            await detectSummits(dbRow.id, dbRow.summary_polyline, dbRow.start_date, db)
+            await detectSummits(dbRow.id, dbRow.summary_polyline, dbRow.start_date, dbRow.elev_high, db)
           } catch (e) {
             console.warn('Summit detection failed for', dbRow.id, e.message)
           }
