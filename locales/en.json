@@ -50,6 +50,12 @@
   "empty.message": "No rides found. Sync runs automatically on first load.",
   "empty.syncButton": "Sync now →",
 
+  "rides.button": "Activities",
+
+  "paesse.label": "Climbs & Passes",
+  "paesse.button": "⛰ Climbs & Passes",
+  "paesse.empty": "No climbs found. Add notes in the format \"Name (ele m) | quäldich-Type\" to your activities.",
+
   "footer.privacy": "Privacy Policy",
 
   "date.locale": "en-GB"
