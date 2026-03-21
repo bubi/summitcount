@@ -1,7 +1,6 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
-import { initMountainBackground } from '../lib/mountainBackground'
 import { useTranslation } from '../lib/i18n'
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
@@ -56,26 +55,9 @@ export default function Dashboard() {
   const [chartMode, setChartMode]     = useState('dist')
   const [error, setError]             = useState('')
   const [loadStatus, setLoadStatus]   = useState('loading.init')
-  const mountainCleanup               = useRef(null)
-
   useEffect(() => {
     init()
-    const timer = setTimeout(() => {
-      mountainCleanup.current = initMountainBackground('mountain-bg')
-    }, 50)
-    return () => {
-      clearTimeout(timer)
-      if (mountainCleanup.current) mountainCleanup.current()
-    }
   }, [])
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (mountainCleanup.current) mountainCleanup.current()
-      mountainCleanup.current = initMountainBackground('mountain-bg')
-    }, 50)
-    return () => clearTimeout(timer)
-  }, [loading])
 
   async function init() {
     setLoadStatus('loading.auth')
@@ -201,7 +183,6 @@ export default function Dashboard() {
         <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
       </Head>
       <div className="loading-page">
-        <canvas id="mountain-bg" className="mountain-canvas" />
         <div className="loading-inner">
           <div className="loading-logo">SUMMIT<br/>COUNT</div>
           <div className="loading-ring">
@@ -216,8 +197,7 @@ export default function Dashboard() {
       </div>
       <style jsx global>{`*{margin:0;padding:0;box-sizing:border-box}html,body,#__next{height:100%;background:#0a0a0a}`}</style>
       <style jsx>{`
-        .loading-page{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0a0a0a;position:relative;}
-        .mountain-canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;}
+        .loading-page{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0a0a0a;}
         .loading-inner{display:flex;flex-direction:column;align-items:center;gap:28px;position:relative;z-index:1;}
         .loading-logo{font-family:'Bebas Neue',sans-serif;font-size:2.8rem;letter-spacing:.04em;line-height:.9;color:#e8ff47;text-align:center}
         .loading-ring{display:flex;align-items:center;justify-content:center}
@@ -235,8 +215,6 @@ export default function Dashboard() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
       </Head>
-
-      <canvas id="mountain-bg" className="mountain-canvas" />
 
       <div className="wrap">
         <div className="header">
@@ -402,8 +380,7 @@ export default function Dashboard() {
         @keyframes spin{to{transform:rotate(360deg)}}
       `}</style>
       <style jsx>{`
-        .mountain-canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;}
-        .wrap{max-width:960px;margin:0 auto;padding:40px 24px;position:relative;z-index:1;}
+        .wrap{max-width:960px;margin:0 auto;padding:40px 24px;}
         .header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:40px;gap:16px;flex-wrap:wrap}
         .logo-area h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(2.4rem,6vw,4rem);letter-spacing:.04em;line-height:.9;color:var(--accent)}
         .header-right{display:flex;flex-direction:column;align-items:flex-end;gap:12px;padding-top:4px}
