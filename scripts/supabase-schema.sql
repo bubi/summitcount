@@ -31,6 +31,7 @@ create table if not exists activities (
   start_date          timestamptz not null,
   distance_m          float default 0,
   elevation_gain_m    float default 0,
+  elev_high           float,
   moving_time_s       integer default 0,
   year                integer,
   month               integer,
