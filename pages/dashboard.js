@@ -31,7 +31,7 @@ function DeltaBadge({ delta, formatAbs }) {
 }
 
 const SPORT_LABELS = {
-  Ride:              'Ride',
+  Ride:              'Road',
   VirtualRide:       'Virtual',
   EBikeRide:         'E-Bike',
   GravelRide:        'Gravel',
@@ -335,7 +335,7 @@ export default function Dashboard() {
                 </button>
               ))}
               <div className="sp-right-group">
-                <button className={view==='rides'&&selectedSports.length===0?'sp-btn active':'sp-btn'} onClick={()=>{setView('rides');setSelectedSports([])}}>🚴 Rides</button>
+                <button className={view==='rides'&&selectedSports.length===0?'sp-btn active':'sp-btn'} onClick={()=>{setView('rides');setSelectedSports([])}}>🚴 Fahrten</button>
                 <button className={view==='paesse'?'sp-btn active':'sp-btn'} onClick={()=>setView('paesse')}>
                   ⛰ Pässe & Berge {climbCount > 0 ? `(${climbCount})` : ''}
                 </button>
@@ -501,11 +501,15 @@ export default function Dashboard() {
                                 target="_blank" rel="noreferrer"
                                 className="climb-ride-row"
                               >
-                                <span className="climb-ride-name">{r.name}</span>
-                                <span className="climb-ride-meta">{new Date(r.start_date).toLocaleDateString(t('date.locale'),{day:'2-digit',month:'short',year:'numeric'})}</span>
+                                <div className="ride-name-cell">
+                                  <div className="ride-name-row">
+                                    <span className="ride-name">{r.name}</span>
+                                    <span className="ride-date-inline">{new Date(r.start_date).toLocaleDateString(t('date.locale'),{day:'2-digit',month:'short',year:'numeric'})}</span>
+                                  </div>
+                                </div>
                                 <span className="climb-ride-meta">{fmtDist(r.distance_m, unit)}</span>
                                 <span className="climb-ride-meta">{fmtElev(r.elevation_gain_m, unit)}</span>
-                                <span className="climb-ride-strava">↗ Strava</span>
+                                <span className="climb-ride-meta ride-val"></span>
                               </a>
                             ))}
                           </div>
@@ -638,11 +642,10 @@ export default function Dashboard() {
         .climb-row-open{background:rgba(255,255,255,0.03)}
         .climb-chevron{font-size:.65rem;margin-right:6px;color:var(--muted);display:inline-block;width:10px}
         .climb-rides{border-bottom:1px solid var(--dim)}
-        .climb-ride-row{display:grid;grid-template-columns:1fr 110px 80px 70px 60px;gap:8px;padding:9px 18px 9px 32px;background:rgba(0,0,0,0.25);border-top:1px solid var(--dim);align-items:center;text-decoration:none;transition:background .12s}
-        .climb-ride-row:hover{background:rgba(252,76,2,0.08)}
-        .climb-ride-name{font-size:.78rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-        .climb-ride-meta{font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted);text-align:right}
-        .climb-ride-strava{font-family:'DM Mono',monospace;font-size:.65rem;color:#FC4C02;text-align:right;opacity:.8}
+        .climb-ride-row{display:grid;grid-template-columns:1fr 90px 80px 80px;gap:8px;padding:9px 18px 9px 32px;background:rgba(0,0,0,0.25);border-top:1px solid var(--dim);align-items:center;text-decoration:none;transition:background .15s;cursor:pointer}
+        .climb-ride-row:hover{background:rgba(252,76,2,0.07)}
+        .climb-ride-row:hover .ride-name{color:var(--accent)}
+        .climb-ride-meta{font-family:'DM Mono',monospace;font-size:.78rem;color:var(--text);text-align:right}
         .app-footer{display:flex;align-items:center;justify-content:space-between;padding:32px 0 8px;border-top:1px solid #1a1a1a;margin-top:8px}
         .strava-footer-link{display:inline-flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:.65rem;color:#444;text-decoration:none;letter-spacing:.08em;text-transform:uppercase;transition:color .15s}
         .strava-footer-link:hover{color:#FC4C02}

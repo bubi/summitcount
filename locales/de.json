@@ -30,8 +30,8 @@
   "stat.unit.activities": "AKTIVITÄTEN",
   "stat.unit.kmh": "KM/H",
   "stat.unit.mph": "MPH",
-  "stat.unit.kmRide": "KM / RIDE",
-  "stat.unit.miRide": "MI / RIDE",
+  "stat.unit.kmRide": "KM / FAHRT",
+  "stat.unit.miRide": "MI / FAHRT",
 
   "chart.title": "Monatsübersicht",
   "chart.tab.distance": "Distanz",
