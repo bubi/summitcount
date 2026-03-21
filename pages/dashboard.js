@@ -63,16 +63,16 @@ export default function Dashboard() {
   useEffect(() => { if (!loading) fetchSummits(year) }, [year, loading])
   useEffect(() => { setTitleSync({ status: 'idle', result: null }) }, [year])
 
-  async function doTitleSync(action) {
-    setTitleSync({ status: action === 'add' ? 'adding' : 'removing', result: null })
+  async function doTitleSync() {
+    setTitleSync({ status: 'syncing', result: null })
     try {
       const res = await fetch('/api/title-sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ year, action }),
+        body: JSON.stringify({ year }),
       })
       const data = await res.json()
-      setTitleSync({ status: 'done', action, result: data })
+      setTitleSync({ status: 'done', result: data })
     } catch (e) {
       setTitleSync({ status: 'idle', result: null })
     }
@@ -397,29 +397,18 @@ export default function Dashboard() {
             </>) : (<>
               <div className="section-title" style={{display:'flex',alignItems:'center',gap:'12px'}}>
                 <span>Besuchte Gipfel — {summitCount}</span>
-                {summitCount > 0 && user?.userId !== 'demo' && (
+                {user?.userId !== 'demo' && (
                   <div className="title-sync-wrap">
                     {titleSync.status === 'idle' && (
-                      <button className="title-sync-btn" onClick={() => doTitleSync('add')}>
-                        ⛰ auf Strava setzen
+                      <button className="title-sync-btn" onClick={doTitleSync}>
+                        ⛰ quäldich sync
                       </button>
                     )}
-                    {titleSync.status === 'adding' && (
-                      <span className="title-sync-info">Wird gesetzt…</span>
+                    {titleSync.status === 'syncing' && (
+                      <span className="title-sync-info">Synchronisiere {year}…</span>
                     )}
-                    {titleSync.status === 'removing' && (
-                      <span className="title-sync-info">Wird entfernt…</span>
-                    )}
-                    {titleSync.status === 'done' && titleSync.action === 'add' && (
-                      <>
-                        <span className="title-sync-ok">✓ {titleSync.result?.updated} Aktivitäten aktualisiert</span>
-                        <button className="title-sync-btn title-sync-remove" onClick={() => doTitleSync('remove')}>
-                          ⛰ wieder entfernen
-                        </button>
-                      </>
-                    )}
-                    {titleSync.status === 'done' && titleSync.action === 'remove' && (
-                      <span className="title-sync-ok">✓ Entfernt — quäldich wird synchronisieren</span>
+                    {titleSync.status === 'done' && (
+                      <span className="title-sync-ok">✓ {titleSync.result?.synced} Aktivitäten getriggert</span>
                     )}
                   </div>
                 )}
@@ -546,8 +535,6 @@ export default function Dashboard() {
         .title-sync-wrap{display:flex;align-items:center;gap:10px;margin-left:4px}
         .title-sync-btn{font-family:'DM Mono',monospace;font-size:.65rem;padding:3px 10px;border-radius:3px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap}
         .title-sync-btn:hover{border-color:#FC4C02;color:#FC4C02}
-        .title-sync-remove{border-color:#555}
-        .title-sync-remove:hover{border-color:#f44336;color:#f44336}
         .title-sync-info{font-family:'DM Mono',monospace;font-size:.62rem;color:var(--muted);animation:pulse 1.2s infinite}
         .title-sync-ok{font-family:'DM Mono',monospace;font-size:.62rem;color:#4caf50}
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
