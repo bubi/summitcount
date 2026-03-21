@@ -323,9 +323,12 @@ export default function Dashboard() {
                   {sportLabel(s)}
                 </button>
               ))}
-              <button className={view==='paesse'?'sp-btn sp-btn-summit active':'sp-btn sp-btn-summit'} onClick={()=>setView('paesse')}>
-                ⛰ Pässe & Berge {climbCount > 0 ? `(${climbCount})` : ''}
-              </button>
+              <div className="sp-right-group">
+                <button className={view==='rides'&&selectedSports.length===0?'sp-btn active':'sp-btn'} onClick={()=>{setView('rides');setSelectedSports([])}}>🚴 Rides</button>
+                <button className={view==='paesse'?'sp-btn active':'sp-btn'} onClick={()=>setView('paesse')}>
+                  ⛰ Pässe & Berge {climbCount > 0 ? `(${climbCount})` : ''}
+                </button>
+              </div>
             </div>
 
             <div className="stats-grid">
@@ -568,9 +571,7 @@ export default function Dashboard() {
         .ride-date{font-family:'DM Mono',monospace;font-size:.68rem;color:var(--muted);margin-top:2px;text-align:left}
         .ride-val{font-family:'DM Mono',monospace;font-size:.78rem}
         .ride-type{font-family:'DM Mono',monospace;font-size:.62rem;padding:2px 7px;border-radius:2px;background:var(--dim);color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
-        .sp-btn-summit{margin-left:auto}
-        .sp-btn-summit.active{background:#3a6b4a;color:#a8ffc4;border-color:#3a6b4a}
-        .sp-btn-summit:hover{border-color:#a8ffc4;color:#a8ffc4}
+        .sp-right-group{margin-left:auto;display:flex;gap:6px}
         .title-sync-wrap{display:flex;align-items:center;gap:10px;margin-left:4px}
         .title-sync-btn{font-family:'DM Mono',monospace;font-size:.65rem;padding:3px 10px;border-radius:3px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap}
         .title-sync-btn:hover{border-color:#FC4C02;color:#FC4C02}
