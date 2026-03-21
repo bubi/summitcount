@@ -7,6 +7,7 @@ export default async function handler(req, res) {
 
   const session = await getSession(req, res)
   if (!session.userId) return res.status(401).json({ error: 'Not logged in' })
+  if (session.demo) return res.json({ synced: 0, deleted: 0, isFullSync: false, lastSyncedAt: new Date().toISOString() })
 
   const db = supabaseAdmin()
 
