@@ -323,6 +323,7 @@ export default function Dashboard() {
                   {sportLabel(s)}
                 </button>
               ))}
+              <button className={view==='rides'&&selectedSports.length===0?'sp-btn sp-btn-summit active':'sp-btn sp-btn-summit'} onClick={()=>{setView('rides');setSelectedSports([])}}>Rides</button>
               <button className={view==='paesse'?'sp-btn sp-btn-summit active':'sp-btn sp-btn-summit'} onClick={()=>setView('paesse')}>
                 ⛰ Pässe & Berge {climbCount > 0 ? `(${climbCount})` : ''}
               </button>
