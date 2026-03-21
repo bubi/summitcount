@@ -26,7 +26,7 @@ function DeltaBadge({ delta, formatAbs }) {
   const pct   = Math.abs(delta.pct).toFixed(1)
   return (
     <div className="delta" style={{ color }}>
-      {arrow} {sign}{formatAbs(Math.abs(delta.abs))} ({sign}{pct}%)
+      {arrow} {sign}{pct}%<span className="delta-abs"> {sign}{formatAbs(Math.abs(delta.abs))}</span>
     </div>
   )
 }
@@ -345,10 +345,12 @@ export default function Dashboard() {
                         <div className={`bar ${chartMode==='elev'?'elev':'dist'}`} style={{height:`${pct}%`}}/>
                         {hasPrevYear && <div className="bar prev" style={{height:`${prevPct}%`}}/>}
                       </div>
-                      <div className="bar-label">{MONTHS[i]}</div>
                     </div>
                   )
                 })}
+              </div>
+              <div className="bar-months">
+                {MONTHS.map((m,i) => <div key={i} className="bar-month">{m}</div>)}
               </div>
             </div>
 
@@ -446,18 +448,20 @@ export default function Dashboard() {
         .chart-tabs{display:flex;gap:8px;margin-bottom:20px}
         .ct{font-family:'DM Mono',monospace;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;padding:4px 10px;border-radius:3px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s}
         .ct.active{border-color:var(--accent2);color:var(--accent2)}
-        .bar-chart{display:flex;align-items:flex-end;gap:6px;height:140px;padding-bottom:28px;position:relative}
-        .bar-chart::before{content:'';position:absolute;bottom:28px;left:0;right:0;height:1px;background:var(--dim)}
+        .bar-chart{display:flex;align-items:flex-end;gap:4px;height:140px;position:relative}
+        .bar-chart::before{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:var(--dim)}
         .bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end;position:relative}
         .bar-wrap:hover .bar-tip{opacity:1}
-        .bar-tip{position:absolute;bottom:calc(100% - 20px);left:50%;transform:translateX(-50%);background:#1a1a1a;border:1px solid var(--border);border-radius:3px;padding:3px 7px;font-family:'DM Mono',monospace;font-size:.62rem;white-space:nowrap;color:var(--text);opacity:0;transition:opacity .15s;pointer-events:none;z-index:10}
+        .bar-tip{position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:#1a1a1a;border:1px solid var(--border);border-radius:3px;padding:3px 7px;font-family:'DM Mono',monospace;font-size:.62rem;white-space:nowrap;color:var(--text);opacity:0;transition:opacity .15s;pointer-events:none;z-index:10}
         .bar-pair{display:flex;align-items:flex-end;gap:2px;width:100%;height:100%;justify-content:center}
         .bar{flex:1;border-radius:3px 3px 0 0;min-height:2px;transition:height .5s cubic-bezier(.34,1.56,.64,1)}
         .bar.dist{background:var(--accent)}
         .bar.elev{background:var(--accent2)}
-        .bar.prev{background:rgba(255,255,255,0.18)}
-        .delta{font-family:'DM Mono',monospace;font-size:.68rem;margin-top:6px;letter-spacing:.04em}
-        .bar-label{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted);position:absolute;bottom:4px}
+        .bar.prev{background:rgba(255,255,255,0.07)}
+        .bar-months{display:flex;gap:4px;margin-top:6px}
+        .bar-month{flex:1;text-align:center;font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted)}
+        .delta{font-family:'DM Mono',monospace;font-size:.48rem;margin-top:8px;opacity:.65}
+        .delta-abs{opacity:.45;font-size:.46rem}
         .rides-list{background:rgba(17,17,17,0.85);border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:28px;backdrop-filter:blur(2px);}
         .rides-header{display:grid;grid-template-columns:1fr 90px 80px 80px 70px;gap:8px;padding:10px 18px;border-bottom:1px solid var(--dim);font-family:'DM Mono',monospace;font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);text-align:right}
         .rides-header span:first-child{text-align:left}
