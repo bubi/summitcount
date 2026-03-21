@@ -38,6 +38,7 @@ export default function LoginPage() {
             </svg>
             Connect with Strava
           </a>
+          <a href="/api/auth/demo" className="demo-btn">Demo ansehen</a>
           <p className="fine">
             Nur Lesezugriff auf deine Aktivitäten.<br/>
             Keine Daten werden an Dritte weitergegeben.
@@ -70,6 +71,8 @@ export default function LoginPage() {
         .err{background:rgba(255,68,68,.08);border:1px solid rgba(255,68,68,.3);border-radius:4px;padding:10px 14px;font-family:'DM Mono',monospace;font-size:.75rem;color:#ff6666;margin-bottom:20px}
         .strava-btn{display:inline-flex;align-items:center;gap:10px;background:#FC4C02;color:#fff;border:none;border-radius:6px;padding:14px 28px;font-family:'DM Sans',sans-serif;font-weight:600;font-size:.95rem;cursor:pointer;text-decoration:none;transition:all .15s;width:100%;justify-content:center}
         .strava-btn:hover{background:#e04400;transform:translateY(-1px)}
+        .demo-btn{display:block;margin-top:10px;font-family:'DM Mono',monospace;font-size:.72rem;color:#555;text-align:center;text-decoration:none;letter-spacing:.08em;text-transform:uppercase;padding:8px;transition:color .15s}
+        .demo-btn:hover{color:#888}
         .fine{font-family:'DM Mono',monospace;font-size:.65rem;color:#444;margin-top:20px;line-height:1.6}
         .footer-links{margin-top:24px;padding-top:20px;border-top:1px solid #1a1a1a;display:flex;align-items:center;justify-content:space-between;gap:12px}
         .powered-link{display:inline-flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:.65rem;color:#444;text-decoration:none;transition:color .15s;letter-spacing:.05em}

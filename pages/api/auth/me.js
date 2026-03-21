@@ -1,10 +1,12 @@
 import { getSession } from '../../../lib/session'
 import { supabaseAdmin } from '../../../lib/supabase'
 import { refreshAccessToken } from '../../../lib/strava'
+import { DEMO_USER } from '../../../lib/demoData'
 
 export default async function handler(req, res) {
   const session = await getSession(req, res)
   if (!session.userId) return res.status(401).json({ error: 'Not logged in' })
+  if (session.demo) return res.json(DEMO_USER)
 
   try {
     const db = supabaseAdmin()
