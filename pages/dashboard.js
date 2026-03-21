@@ -11,6 +11,26 @@ const fmtTime  = s => { const h=Math.floor(s/3600),m=Math.floor((s%3600)/60); re
 const fmtVal   = (m,u) => u==='metric' ? (m/1000).toFixed(1) : (m/1609.34).toFixed(1)
 const fmtElevV = (m,u) => u==='metric' ? Math.round(m) : Math.round(m*3.28084)
 
+function calcDelta(current, prev) {
+  if (prev === 0) return null
+  const abs = current - prev
+  const pct = (abs / prev) * 100
+  return { abs, pct, positive: abs >= 0 }
+}
+
+function DeltaBadge({ delta, formatAbs }) {
+  if (!delta) return null
+  const sign  = delta.positive ? '+' : '−'
+  const arrow = delta.positive ? '▲' : '▼'
+  const color = delta.positive ? '#4caf50' : '#f44336'
+  const pct   = Math.abs(delta.pct).toFixed(1)
+  return (
+    <div className="delta" style={{ color }}>
+      {arrow} {sign}{pct}%<span className="delta-abs"> {sign}{formatAbs(Math.abs(delta.abs))}</span>
+    </div>
+  )
+}
+
 const SPORT_LABELS = {
   Ride:              'Ride',
   VirtualRide:       'Virtual',
@@ -116,6 +136,42 @@ export default function Dashboard() {
   const totalTime = filteredRides.reduce((s,a)=>s+(a.moving_time_s||0),0)
   const avgSpeed  = totalTime>0 ? totalDist/totalTime*3.6 : 0
 
+  // Vorjahr
+  const prevYear      = year - 1
+  const prevYearRides = activities.filter(a => new Date(a.start_date).getFullYear() === prevYear)
+  const prevFiltered  = selectedSports.length === 0
+    ? prevYearRides
+    : prevYearRides.filter(a => selectedSports.includes(a.sport_type))
+  const hasPrevYear   = prevFiltered.length > 0
+  const prevTotalDist = prevFiltered.reduce((s,a)=>s+(a.distance_m||0),0)
+  const prevTotalElev = prevFiltered.reduce((s,a)=>s+(a.elevation_gain_m||0),0)
+  const prevTotalTime = prevFiltered.reduce((s,a)=>s+(a.moving_time_s||0),0)
+  const prevAvgSpeed  = prevTotalTime>0 ? prevTotalDist/prevTotalTime*3.6 : 0
+  const currAvgDist   = filteredRides.length>0 ? totalDist/filteredRides.length : 0
+  const prevAvgDist   = prevFiltered.length>0 ? prevTotalDist/prevFiltered.length : 0
+  const isMetric      = unit==='metric'
+
+  const stats = [
+    { label: t('stat.totalDistance'),   value: fmtVal(totalDist,unit),                              unit: isMetric?t('stat.unit.km'):t('stat.unit.miles'),
+      delta: hasPrevYear ? calcDelta(totalDist,prevTotalDist) : null,
+      formatAbs: v => fmtVal(v,unit)+(isMetric?' km':' mi') },
+    { label: t('stat.elevationGained'), value: fmtElevV(totalElev,unit).toLocaleString(),           unit: isMetric?t('stat.unit.meters'):t('stat.unit.feet'),
+      delta: hasPrevYear ? calcDelta(totalElev,prevTotalElev) : null,
+      formatAbs: v => fmtElevV(v,unit).toLocaleString()+(isMetric?' m':' ft') },
+    { label: t('stat.totalTime'),       value: fmtTime(totalTime),                                  unit: t('stat.unit.hrsMin'),
+      delta: hasPrevYear ? calcDelta(totalTime,prevTotalTime) : null,
+      formatAbs: v => fmtTime(v) },
+    { label: t('stat.rides'),           value: filteredRides.length,                                unit: t('stat.unit.activities'),
+      delta: hasPrevYear ? calcDelta(filteredRides.length,prevFiltered.length) : null,
+      formatAbs: v => Math.round(v) },
+    { label: t('stat.avgSpeed'),        value: (isMetric?avgSpeed:avgSpeed*.621).toFixed(1),        unit: isMetric?t('stat.unit.kmh'):t('stat.unit.mph'),
+      delta: hasPrevYear ? calcDelta(isMetric?avgSpeed:avgSpeed*.621, isMetric?prevAvgSpeed:prevAvgSpeed*.621) : null,
+      formatAbs: v => v.toFixed(1)+(isMetric?' km/h':' mph') },
+    { label: t('stat.avgDistance'),     value: filteredRides.length>0?fmtVal(currAvgDist,unit):'0', unit: isMetric?t('stat.unit.kmRide'):t('stat.unit.miRide'),
+      delta: hasPrevYear&&prevAvgDist>0 ? calcDelta(currAvgDist,prevAvgDist) : null,
+      formatAbs: v => fmtVal(v,unit)+(isMetric?' km':' mi') },
+  ]
+
   const monthly = MONTHS.map((_,i) => {
     const rides = filteredRides.filter(a => new Date(a.start_date).getMonth()===i)
     return {
@@ -124,9 +180,18 @@ export default function Dashboard() {
       count: rides.length,
     }
   })
-  const chartVals = monthly.map(m => chartMode==='dist'?m.dist/1000 : chartMode==='elev'?m.elev : m.count)
-  const chartMax  = Math.max(...chartVals, 1)
-  const sortedRides = [...filteredRides].sort((a,b)=>new Date(b.start_date)-new Date(a.start_date))
+  const prevMonthly = MONTHS.map((_,i) => {
+    const rides = prevFiltered.filter(a => new Date(a.start_date).getMonth()===i)
+    return {
+      dist:  rides.reduce((s,a)=>s+(a.distance_m||0),0),
+      elev:  rides.reduce((s,a)=>s+(a.elevation_gain_m||0),0),
+      count: rides.length,
+    }
+  })
+  const chartVals     = monthly.map(m => chartMode==='dist'?m.dist/1000 : chartMode==='elev'?m.elev : m.count)
+  const prevChartVals = prevMonthly.map(m => chartMode==='dist'?m.dist/1000 : chartMode==='elev'?m.elev : m.count)
+  const chartMax      = Math.max(...chartVals, ...(hasPrevYear ? prevChartVals : []), 1)
+  const sortedRides   = [...filteredRides].sort((a,b)=>new Date(b.start_date)-new Date(a.start_date))
 
   if (loading) return (
     <>
@@ -242,18 +307,12 @@ export default function Dashboard() {
             )}
 
             <div className="stats-grid">
-              {[
-                { label: t('stat.totalDistance'),   value: fmtVal(totalDist,unit),                              unit: unit==='metric'?t('stat.unit.km'):t('stat.unit.miles') },
-                { label: t('stat.elevationGained'), value: fmtElevV(totalElev,unit).toLocaleString(),           unit: unit==='metric'?t('stat.unit.meters'):t('stat.unit.feet') },
-                { label: t('stat.totalTime'),       value: fmtTime(totalTime),                                  unit: t('stat.unit.hrsMin') },
-                { label: t('stat.rides'),           value: filteredRides.length,                                unit: t('stat.unit.activities') },
-                { label: t('stat.avgSpeed'),        value: (unit==='metric'?avgSpeed:avgSpeed*.621).toFixed(1), unit: unit==='metric'?t('stat.unit.kmh'):t('stat.unit.mph') },
-                { label: t('stat.avgDistance'),     value: filteredRides.length>0?fmtVal(totalDist/filteredRides.length,unit):'0', unit: unit==='metric'?t('stat.unit.kmRide'):t('stat.unit.miRide') },
-              ].map(c=>(
+              {stats.map(c=>(
                 <div key={c.label} className="stat-card">
                   <div className="stat-label">{c.label}</div>
                   <div className="stat-value">{c.value}</div>
                   <div className="stat-unit">{c.unit}</div>
+                  <DeltaBadge delta={c.delta} formatAbs={c.formatAbs} />
                 </div>
               ))}
             </div>
@@ -268,19 +327,30 @@ export default function Dashboard() {
               <div className="bar-chart">
                 {monthly.map((m,i)=>{
                   const val=chartVals[i], pct=(val/chartMax)*100
+                  const prevVal=prevChartVals[i], prevPct=(prevVal/chartMax)*100
                   const tip = chartMode==='dist'
                     ? (unit==='metric'?val.toFixed(0)+'km':(val*.621).toFixed(0)+'mi')
                     : chartMode==='elev'
                     ? (unit==='metric'?Math.round(m.elev)+'m':Math.round(m.elev*3.28)+'ft')
                     : t('chart.tooltip.rides', { count: val })
+                  const prevTip = chartMode==='dist'
+                    ? (unit==='metric'?prevVal.toFixed(0)+'km':(prevVal*.621).toFixed(0)+'mi')
+                    : chartMode==='elev'
+                    ? (unit==='metric'?Math.round(prevMonthly[i].elev)+'m':Math.round(prevMonthly[i].elev*3.28)+'ft')
+                    : t('chart.tooltip.rides', { count: prevVal })
                   return (
                     <div key={i} className="bar-wrap">
-                      <div className="bar-tip">{tip}</div>
-                      <div className={`bar ${chartMode==='elev'?'elev':'dist'}`} style={{height:`${pct}%`}}/>
-                      <div className="bar-label">{MONTHS[i]}</div>
+                      <div className="bar-tip">{tip}{hasPrevYear ? ` / VJ: ${prevTip}` : ''}</div>
+                      <div className="bar-pair">
+                        <div className={`bar ${chartMode==='elev'?'elev':'dist'}`} style={{height:`${pct}%`}}/>
+                        {hasPrevYear && <div className="bar prev" style={{height:`${prevPct}%`}}/>}
+                      </div>
                     </div>
                   )
                 })}
+              </div>
+              <div className="bar-months">
+                {MONTHS.map((m,i) => <div key={i} className="bar-month">{m}</div>)}
               </div>
             </div>
 
@@ -378,15 +448,20 @@ export default function Dashboard() {
         .chart-tabs{display:flex;gap:8px;margin-bottom:20px}
         .ct{font-family:'DM Mono',monospace;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;padding:4px 10px;border-radius:3px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s}
         .ct.active{border-color:var(--accent2);color:var(--accent2)}
-        .bar-chart{display:flex;align-items:flex-end;gap:6px;height:140px;padding-bottom:28px;position:relative}
-        .bar-chart::before{content:'';position:absolute;bottom:28px;left:0;right:0;height:1px;background:var(--dim)}
+        .bar-chart{display:flex;align-items:flex-end;gap:4px;height:140px;position:relative}
+        .bar-chart::before{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:var(--dim)}
         .bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end;position:relative}
         .bar-wrap:hover .bar-tip{opacity:1}
-        .bar-tip{position:absolute;bottom:calc(100% - 20px);left:50%;transform:translateX(-50%);background:#1a1a1a;border:1px solid var(--border);border-radius:3px;padding:3px 7px;font-family:'DM Mono',monospace;font-size:.62rem;white-space:nowrap;color:var(--text);opacity:0;transition:opacity .15s;pointer-events:none;z-index:10}
-        .bar{width:100%;border-radius:3px 3px 0 0;min-height:2px;transition:height .5s cubic-bezier(.34,1.56,.64,1)}
+        .bar-tip{position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:#1a1a1a;border:1px solid var(--border);border-radius:3px;padding:3px 7px;font-family:'DM Mono',monospace;font-size:.62rem;white-space:nowrap;color:var(--text);opacity:0;transition:opacity .15s;pointer-events:none;z-index:10}
+        .bar-pair{display:flex;align-items:flex-end;gap:2px;width:100%;height:100%;justify-content:center}
+        .bar{flex:1;border-radius:3px 3px 0 0;min-height:2px;transition:height .5s cubic-bezier(.34,1.56,.64,1)}
         .bar.dist{background:var(--accent)}
         .bar.elev{background:var(--accent2)}
-        .bar-label{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted);position:absolute;bottom:4px}
+        .bar.prev{background:rgba(255,255,255,0.07)}
+        .bar-months{display:flex;gap:4px;margin-top:6px}
+        .bar-month{flex:1;text-align:center;font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted)}
+        .delta{font-family:'DM Mono',monospace;font-size:.48rem;margin-top:8px;opacity:.65}
+        .delta-abs{opacity:.45;font-size:.46rem}
         .rides-list{background:rgba(17,17,17,0.85);border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:28px;backdrop-filter:blur(2px);}
         .rides-header{display:grid;grid-template-columns:1fr 90px 80px 80px 70px;gap:8px;padding:10px 18px;border-bottom:1px solid var(--dim);font-family:'DM Mono',monospace;font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);text-align:right}
         .rides-header span:first-child{text-align:left}
