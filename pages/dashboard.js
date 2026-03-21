@@ -57,9 +57,26 @@ export default function Dashboard() {
   const [loadStatus, setLoadStatus]   = useState('loading.init')
   const [summitData, setSummitData]   = useState({ current: { total: 0, summits: [] }, previous: { total: 0 } })
   const [view, setView]               = useState('rides') // 'rides' | 'gipfel'
+  const [titleSync, setTitleSync]     = useState({ status: 'idle', result: null }) // idle | adding | removing | done
 
   useEffect(() => { init() }, [])
   useEffect(() => { if (!loading) fetchSummits(year) }, [year, loading])
+  useEffect(() => { setTitleSync({ status: 'idle', result: null }) }, [year])
+
+  async function doTitleSync() {
+    setTitleSync({ status: 'syncing', result: null })
+    try {
+      const res = await fetch('/api/title-sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ year }),
+      })
+      const data = await res.json()
+      setTitleSync({ status: 'done', result: data })
+    } catch (e) {
+      setTitleSync({ status: 'idle', result: null })
+    }
+  }
 
   async function init() {
     setLoadStatus('loading.auth')
@@ -378,7 +395,24 @@ export default function Dashboard() {
                 ))}
               </div>
             </>) : (<>
-              <div className="section-title">Besuchte Gipfel — {summitCount}</div>
+              <div className="section-title" style={{display:'flex',alignItems:'center',gap:'12px'}}>
+                <span>Besuchte Gipfel — {summitCount}</span>
+                {user?.userId !== 'demo' && (
+                  <div className="title-sync-wrap">
+                    {titleSync.status === 'idle' && (
+                      <button className="title-sync-btn" onClick={doTitleSync}>
+                        ⛰ quäldich sync
+                      </button>
+                    )}
+                    {titleSync.status === 'syncing' && (
+                      <span className="title-sync-info">Synchronisiere {year}…</span>
+                    )}
+                    {titleSync.status === 'done' && (
+                      <span className="title-sync-ok">✓ {titleSync.result?.synced} Aktivitäten getriggert</span>
+                    )}
+                  </div>
+                )}
+              </div>
               <div className="rides-list">
                 {summitData.current.summits.length === 0 ? (
                   <div className="summit-empty">
@@ -498,6 +532,12 @@ export default function Dashboard() {
         .sp-btn-summit{margin-left:auto}
         .sp-btn-summit.active{background:#3a6b4a;color:#a8ffc4;border-color:#3a6b4a}
         .sp-btn-summit:hover{border-color:#a8ffc4;color:#a8ffc4}
+        .title-sync-wrap{display:flex;align-items:center;gap:10px;margin-left:4px}
+        .title-sync-btn{font-family:'DM Mono',monospace;font-size:.65rem;padding:3px 10px;border-radius:3px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap}
+        .title-sync-btn:hover{border-color:#FC4C02;color:#FC4C02}
+        .title-sync-info{font-family:'DM Mono',monospace;font-size:.62rem;color:var(--muted);animation:pulse 1.2s infinite}
+        .title-sync-ok{font-family:'DM Mono',monospace;font-size:.62rem;color:#4caf50}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
         .summit-header{display:grid;grid-template-columns:1fr 80px 80px 70px 100px;gap:8px;padding:10px 18px;border-bottom:1px solid var(--dim);font-family:'DM Mono',monospace;font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);text-align:right}
         .summit-header span:first-child{text-align:left}
         .summit-row{display:grid;grid-template-columns:1fr 80px 80px 70px 100px;gap:8px;padding:12px 18px;border-bottom:1px solid var(--dim);align-items:center;transition:background .15s;text-align:right}
