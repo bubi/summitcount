@@ -55,9 +55,11 @@ export default function Dashboard() {
   const [chartMode, setChartMode]     = useState('dist')
   const [error, setError]             = useState('')
   const [loadStatus, setLoadStatus]   = useState('loading.init')
-  useEffect(() => {
-    init()
-  }, [])
+  const [summitData, setSummitData]   = useState({ current: { total: 0, summits: [] }, previous: { total: 0 } })
+  const [view, setView]               = useState('rides') // 'rides' | 'gipfel'
+
+  useEffect(() => { init() }, [])
+  useEffect(() => { if (!loading) fetchSummits(year) }, [year, loading])
 
   async function init() {
     setLoadStatus('loading.auth')
@@ -79,6 +81,13 @@ export default function Dashboard() {
     doSync()
   }
 
+  async function fetchSummits(yr) {
+    try {
+      const res = await fetch(`/api/summits?year=${yr}`)
+      if (res.ok) setSummitData(await res.json())
+    } catch (_) {}
+  }
+
   async function doSync() {
     setSyncing(true)
     setError('')
@@ -96,6 +105,7 @@ export default function Dashboard() {
           setYear(prev => years.includes(prev) ? prev : years[0])
         }
       }
+      await fetchSummits(year)
     } catch(e) { setError(e.message) }
     setSyncing(false)
   }
@@ -133,6 +143,9 @@ export default function Dashboard() {
   const prevAvgDist   = prevFiltered.length>0 ? prevTotalDist/prevFiltered.length : 0
   const isMetric      = unit==='metric'
 
+  const summitCount     = summitData.current.total
+  const prevSummitCount = summitData.previous.total
+
   const stats = [
     { label: t('stat.totalDistance'),   value: fmtVal(totalDist,unit),                              unit: isMetric?t('stat.unit.km'):t('stat.unit.miles'),
       delta: hasPrevYear ? calcDelta(totalDist,prevTotalDist) : null,
@@ -152,6 +165,9 @@ export default function Dashboard() {
     { label: t('stat.avgDistance'),     value: filteredRides.length>0?fmtVal(currAvgDist,unit):'0', unit: isMetric?t('stat.unit.kmRide'):t('stat.unit.miRide'),
       delta: hasPrevYear&&prevAvgDist>0 ? calcDelta(currAvgDist,prevAvgDist) : null,
       formatAbs: v => fmtVal(v,unit)+(isMetric?' km':' mi') },
+    { label: 'Gipfel',                  value: summitCount,                                          unit: 'Hochpunkte',
+      delta: prevSummitCount>0 ? calcDelta(summitCount,prevSummitCount) : null,
+      formatAbs: v => Math.round(v) },
   ]
 
   const monthly = MONTHS.map((_,i) => {
@@ -273,16 +289,17 @@ export default function Dashboard() {
               ))}
             </div>
 
-            {availableSports.length > 1 && (
-              <div className="sport-nav">
-                <button className={selectedSports.length===0?'sp-btn active':'sp-btn'} onClick={()=>setSelectedSports([])}>{t('sport.all')}</button>
-                {availableSports.map(s=>(
-                  <button key={s} className={selectedSports.includes(s)?'sp-btn active':'sp-btn'} onClick={()=>toggleSport(s)}>
-                    {sportLabel(s)}
-                  </button>
-                ))}
-              </div>
-            )}
+            <div className="sport-nav">
+              <button className={view==='rides'&&selectedSports.length===0?'sp-btn active':'sp-btn'} onClick={()=>{setView('rides');setSelectedSports([])}}>{t('sport.all')}</button>
+              {availableSports.map(s=>(
+                <button key={s} className={view==='rides'&&selectedSports.includes(s)?'sp-btn active':'sp-btn'} onClick={()=>{setView('rides');toggleSport(s)}}>
+                  {sportLabel(s)}
+                </button>
+              ))}
+              <button className={view==='gipfel'?'sp-btn sp-btn-summit active':'sp-btn sp-btn-summit'} onClick={()=>setView('gipfel')}>
+                ⛰ Gipfel {summitCount > 0 ? `(${summitCount})` : ''}
+              </button>
+            </div>
 
             <div className="stats-grid">
               {stats.map(c=>(
@@ -332,33 +349,61 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="section-title">
-              {selectedSports.length > 0
-                ? t('rides.title.filtered', { sports: selectedSports.map(sportLabel).join(', '), count: sortedRides.length })
-                : t('rides.title.all', { count: sortedRides.length })}
-            </div>
-            <div className="rides-list">
-              <div className="rides-header">
-                <span>{t('rides.col.activity')}</span>
-                <span>{t('rides.col.dist')}</span>
-                <span>{t('rides.col.elev')}</span>
-                <span>{t('rides.col.time')}</span>
-                <span>{t('rides.col.type')}</span>
+            {view === 'rides' ? (<>
+              <div className="section-title">
+                {selectedSports.length > 0
+                  ? t('rides.title.filtered', { sports: selectedSports.map(sportLabel).join(', '), count: sortedRides.length })
+                  : t('rides.title.all', { count: sortedRides.length })}
               </div>
-              {sortedRides.map(a=>(
-                <div key={a.id} className="ride-row">
-                  <div>
-                    <a href={`https://www.strava.com/activities/${a.strava_activity_id}`}
-                      target="_blank" rel="noreferrer" className="ride-name">{a.name}</a>
-                    <div className="ride-date">{new Date(a.start_date).toLocaleDateString(t('date.locale'),{day:'2-digit',month:'short',year:'numeric'})}</div>
-                  </div>
-                  <div className="ride-val">{fmtDist(a.distance_m,unit)}</div>
-                  <div className="ride-val">{fmtElev(a.elevation_gain_m,unit)}</div>
-                  <div className="ride-val">{fmtTime(a.moving_time_s)}</div>
-                  <div><span className="ride-type">{sportLabel(a.sport_type)}</span></div>
+              <div className="rides-list">
+                <div className="rides-header">
+                  <span>{t('rides.col.activity')}</span>
+                  <span>{t('rides.col.dist')}</span>
+                  <span>{t('rides.col.elev')}</span>
+                  <span>{t('rides.col.time')}</span>
+                  <span>{t('rides.col.type')}</span>
                 </div>
-              ))}
-            </div>
+                {sortedRides.map(a=>(
+                  <div key={a.id} className="ride-row">
+                    <div>
+                      <a href={`https://www.strava.com/activities/${a.strava_activity_id}`}
+                        target="_blank" rel="noreferrer" className="ride-name">{a.name}</a>
+                      <div className="ride-date">{new Date(a.start_date).toLocaleDateString(t('date.locale'),{day:'2-digit',month:'short',year:'numeric'})}</div>
+                    </div>
+                    <div className="ride-val">{fmtDist(a.distance_m,unit)}</div>
+                    <div className="ride-val">{fmtElev(a.elevation_gain_m,unit)}</div>
+                    <div className="ride-val">{fmtTime(a.moving_time_s)}</div>
+                    <div><span className="ride-type">{sportLabel(a.sport_type)}</span></div>
+                  </div>
+                ))}
+              </div>
+            </>) : (<>
+              <div className="section-title">Besuchte Gipfel — {summitCount}</div>
+              <div className="rides-list">
+                {summitData.current.summits.length === 0 ? (
+                  <div className="summit-empty">
+                    <p>Noch keine Gipfel erkannt. Sync starten um Routen zu analysieren.</p>
+                  </div>
+                ) : (<>
+                  <div className="summit-header">
+                    <span>Gipfel</span>
+                    <span>Höhe</span>
+                    <span>Typ</span>
+                    <span>Besuche</span>
+                    <span>Zuletzt</span>
+                  </div>
+                  {summitData.current.summits.map(s=>(
+                    <div key={s.summit_id} className="summit-row">
+                      <div className="summit-name">{s.name}</div>
+                      <div className="ride-val">{s.ele ? s.ele+' m' : '—'}</div>
+                      <div><span className="ride-type">{s.osm_type==='peak'?'Gipfel':s.osm_type==='saddle'?'Sattel':'Pass'}</span></div>
+                      <div className="ride-val">{s.visit_count}×</div>
+                      <div className="ride-val">{new Date(s.last_visited).toLocaleDateString(t('date.locale'),{day:'2-digit',month:'short',year:'numeric'})}</div>
+                    </div>
+                  ))}
+                </>)}
+              </div>
+            </>)}
 
             <div className="app-footer">
               <a href="https://www.strava.com" target="_blank" rel="noreferrer" className="strava-footer-link">
@@ -450,6 +495,16 @@ export default function Dashboard() {
         .ride-date{font-family:'DM Mono',monospace;font-size:.68rem;color:var(--muted);margin-top:2px;text-align:left}
         .ride-val{font-family:'DM Mono',monospace;font-size:.78rem}
         .ride-type{font-family:'DM Mono',monospace;font-size:.62rem;padding:2px 7px;border-radius:2px;background:var(--dim);color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+        .sp-btn-summit{margin-left:auto}
+        .sp-btn-summit.active{background:#3a6b4a;color:#a8ffc4;border-color:#3a6b4a}
+        .sp-btn-summit:hover{border-color:#a8ffc4;color:#a8ffc4}
+        .summit-header{display:grid;grid-template-columns:1fr 80px 80px 70px 100px;gap:8px;padding:10px 18px;border-bottom:1px solid var(--dim);font-family:'DM Mono',monospace;font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);text-align:right}
+        .summit-header span:first-child{text-align:left}
+        .summit-row{display:grid;grid-template-columns:1fr 80px 80px 70px 100px;gap:8px;padding:12px 18px;border-bottom:1px solid var(--dim);align-items:center;transition:background .15s;text-align:right}
+        .summit-row:last-child{border-bottom:none}
+        .summit-row:hover{background:rgba(42,42,42,0.8)}
+        .summit-name{font-size:.82rem;font-weight:500;text-align:left;color:var(--text)}
+        .summit-empty{padding:40px 18px;text-align:center;font-family:'DM Mono',monospace;font-size:.75rem;color:var(--muted)}
         .app-footer{display:flex;align-items:center;justify-content:space-between;padding:32px 0 8px;border-top:1px solid #1a1a1a;margin-top:8px}
         .strava-footer-link{display:inline-flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:.65rem;color:#444;text-decoration:none;letter-spacing:.08em;text-transform:uppercase;transition:color .15s}
         .strava-footer-link:hover{color:#FC4C02}

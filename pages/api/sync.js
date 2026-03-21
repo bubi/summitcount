@@ -1,6 +1,9 @@
 import { supabaseAdmin } from '../../lib/supabase'
 import { getSession } from '../../lib/session'
 import { fetchActivitiesSince, fetchAllActivityIds, refreshAccessToken } from '../../lib/strava'
+import { detectSummits } from '../../lib/summits'
+
+const REAL_SPORT_TYPES = ['Ride','EBikeRide','GravelRide','MountainBikeRide','EMountainBikeRide']
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end()
@@ -37,7 +40,7 @@ export default async function handler(req, res) {
     const afterTs = user.last_synced_at
       ? Math.floor(new Date(user.last_synced_at).getTime() / 1000)
       : null
-    const isFullSync = !afterTs
+    const isFullSync  = !afterTs
     const syncStarted = new Date().toISOString()
 
     const newActivities = await fetchActivitiesSince(accessToken, afterTs)
@@ -45,22 +48,47 @@ export default async function handler(req, res) {
     let inserted = 0
     if (newActivities.length > 0) {
       const rows = newActivities.map(a => ({
-        user_id:              session.userId,
-        strava_activity_id:   String(a.id),
-        name:                 a.name,
-        sport_type:           a.sport_type || a.type,
-        start_date:           a.start_date,
-        distance_m:           a.distance || 0,
-        elevation_gain_m:     a.total_elevation_gain || 0,
-        moving_time_s:        a.moving_time || 0,
-        year:                 new Date(a.start_date).getFullYear(),
-        month:                new Date(a.start_date).getMonth() + 1,
+        user_id:             session.userId,
+        strava_activity_id:  String(a.id),
+        name:                a.name,
+        sport_type:          a.sport_type || a.type,
+        start_date:          a.start_date,
+        distance_m:          a.distance || 0,
+        elevation_gain_m:    a.total_elevation_gain || 0,
+        moving_time_s:       a.moving_time || 0,
+        year:                new Date(a.start_date).getFullYear(),
+        month:               new Date(a.start_date).getMonth() + 1,
+        summary_polyline:    a.map?.summary_polyline || null,
       }))
       const { error: insertErr } = await db
         .from('activities')
         .upsert(rows, { onConflict: 'strava_activity_id', ignoreDuplicates: false })
       if (insertErr) throw insertErr
       inserted = newActivities.length
+
+      // Summit detection for real outdoor rides with GPS
+      const withPolyline = newActivities.filter(a =>
+        a.map?.summary_polyline && REAL_SPORT_TYPES.includes(a.sport_type || a.type)
+      )
+      if (withPolyline.length > 0) {
+        // Fetch activity IDs from DB (we need the UUID, not the Strava ID)
+        const stravaIds = withPolyline.map(a => String(a.id))
+        const { data: dbRows } = await db
+          .from('activities')
+          .select('id, strava_activity_id, start_date, summary_polyline')
+          .in('strava_activity_id', stravaIds)
+
+        for (const dbRow of dbRows || []) {
+          if (!dbRow.summary_polyline) continue
+          try {
+            await detectSummits(dbRow.id, dbRow.summary_polyline, dbRow.start_date, db)
+          } catch (e) {
+            console.warn('Summit detection failed for', dbRow.id, e.message)
+          }
+          // Small pause to be kind to Overpass API
+          await new Promise(r => setTimeout(r, 500))
+        }
+      }
     }
 
     let deleted = 0
