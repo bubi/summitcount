@@ -446,6 +446,21 @@ export default function Dashboard() {
             </>) : (<>
               <div className="section-title" style={{display:'flex',alignItems:'center',gap:'12px'}}>
                 <span>Pässe & Berge — {climbCount}</span>
+                {user?.userId !== 'demo' && (
+                  <div className="title-sync-wrap">
+                    {titleSync.status === 'idle' && (
+                      <button className="title-sync-btn" onClick={doTitleSync}>
+                        ⛰ Sync
+                      </button>
+                    )}
+                    {titleSync.status === 'syncing' && (
+                      <span className="title-sync-info">Synchronisiere {year}…</span>
+                    )}
+                    {titleSync.status === 'done' && (
+                      <span className="title-sync-ok">✓ {titleSync.result?.synced} Aktivitäten getriggert</span>
+                    )}
+                  </div>
+                )}
               </div>
               <div className="rides-list">
                 {climbData.current.climbs.length === 0 ? (
