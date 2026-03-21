@@ -44,6 +44,20 @@ create index if not exists idx_activities_user_id    on activities(user_id);
 create index if not exists idx_activities_year       on activities(user_id, year);
 create index if not exists idx_activities_start_date on activities(user_id, start_date desc);
 
+-- quäldich climbs extracted from activity descriptions
+create table if not exists qualdich_climbs (
+  id          uuid primary key default gen_random_uuid(),
+  activity_id uuid not null references activities(id) on delete cascade,
+  name        text not null,
+  ele         integer,
+  climb_type  text,           -- 'Passjagd' | 'Bergwertung' | 'Gipfeljagd' | …
+  visited_at  timestamptz,
+  created_at  timestamptz default now(),
+  unique(activity_id, name)
+);
+create index if not exists idx_qualdich_activity on qualdich_climbs(activity_id);
+create index if not exists idx_qualdich_name     on qualdich_climbs(name);
+
 -- Summits cache (OSM nodes)
 create table if not exists summits (
   id        uuid primary key default gen_random_uuid(),

@@ -56,11 +56,12 @@ export default function Dashboard() {
   const [error, setError]             = useState('')
   const [loadStatus, setLoadStatus]   = useState('loading.init')
   const [summitData, setSummitData]   = useState({ current: { total: 0, summits: [] }, previous: { total: 0 } })
-  const [view, setView]               = useState('rides') // 'rides' | 'gipfel'
-  const [titleSync, setTitleSync]     = useState({ status: 'idle', result: null }) // idle | adding | removing | done
+  const [climbData, setClimbData]     = useState({ current: { total: 0, climbs: [] }, previous: { total: 0 } })
+  const [view, setView]               = useState('rides') // 'rides' | 'paesse'
+  const [titleSync, setTitleSync]     = useState({ status: 'idle', result: null })
 
   useEffect(() => { init() }, [])
-  useEffect(() => { if (!loading) fetchSummits(year) }, [year, loading])
+  useEffect(() => { if (!loading) { fetchSummits(year); fetchClimbs(year) } }, [year, loading])
   useEffect(() => { setTitleSync({ status: 'idle', result: null }) }, [year])
 
   async function doTitleSync() {
@@ -96,6 +97,13 @@ export default function Dashboard() {
     }
     setLoading(false)
     doSync()
+  }
+
+  async function fetchClimbs(yr) {
+    try {
+      const res = await fetch(`/api/climbs?year=${yr}`)
+      if (res.ok) setClimbData(await res.json())
+    } catch {}
   }
 
   async function fetchSummits(yr) {
@@ -162,6 +170,8 @@ export default function Dashboard() {
 
   const summitCount     = summitData.current.total
   const prevSummitCount = summitData.previous.total
+  const climbCount      = climbData.current.total
+  const prevClimbCount  = climbData.previous.total
 
   const stats = [
     { label: t('stat.totalDistance'),   value: fmtVal(totalDist,unit),                              unit: isMetric?t('stat.unit.km'):t('stat.unit.miles'),
@@ -182,8 +192,8 @@ export default function Dashboard() {
     { label: t('stat.avgDistance'),     value: filteredRides.length>0?fmtVal(currAvgDist,unit):'0', unit: isMetric?t('stat.unit.kmRide'):t('stat.unit.miRide'),
       delta: hasPrevYear&&prevAvgDist>0 ? calcDelta(currAvgDist,prevAvgDist) : null,
       formatAbs: v => fmtVal(v,unit)+(isMetric?' km':' mi') },
-    { label: 'Gipfel',                  value: summitCount,                                          unit: 'Hochpunkte',
-      delta: prevSummitCount>0 ? calcDelta(summitCount,prevSummitCount) : null,
+    { label: 'Pässe & Berge',            value: climbCount,                                           unit: 'quäldich',
+      delta: prevClimbCount>0 ? calcDelta(climbCount,prevClimbCount) : null,
       formatAbs: v => Math.round(v) },
   ]
 
@@ -313,8 +323,8 @@ export default function Dashboard() {
                   {sportLabel(s)}
                 </button>
               ))}
-              <button className={view==='gipfel'?'sp-btn sp-btn-summit active':'sp-btn sp-btn-summit'} onClick={()=>setView('gipfel')}>
-                ⛰ Gipfel {summitCount > 0 ? `(${summitCount})` : ''}
+              <button className={view==='paesse'?'sp-btn sp-btn-summit active':'sp-btn sp-btn-summit'} onClick={()=>setView('paesse')}>
+                ⛰ Pässe & Berge {climbCount > 0 ? `(${climbCount})` : ''}
               </button>
             </div>
 
@@ -396,7 +406,7 @@ export default function Dashboard() {
               </div>
             </>) : (<>
               <div className="section-title" style={{display:'flex',alignItems:'center',gap:'12px'}}>
-                <span>Besuchte Gipfel — {summitCount}</span>
+                <span>Pässe & Berge — {climbCount}</span>
                 {user?.userId !== 'demo' && (
                   <div className="title-sync-wrap">
                     {titleSync.status === 'idle' && (
@@ -414,25 +424,25 @@ export default function Dashboard() {
                 )}
               </div>
               <div className="rides-list">
-                {summitData.current.summits.length === 0 ? (
+                {climbData.current.climbs.length === 0 ? (
                   <div className="summit-empty">
-                    <p>Noch keine Gipfel erkannt. Sync starten um Routen zu analysieren.</p>
+                    <p>Keine quäldich-Einträge gefunden. quäldich muss Aktivitäten mit Notizen versehen haben.</p>
                   </div>
                 ) : (<>
                   <div className="summit-header">
-                    <span>Gipfel</span>
+                    <span>Pass / Berg</span>
                     <span>Höhe</span>
                     <span>Typ</span>
                     <span>Besuche</span>
                     <span>Zuletzt</span>
                   </div>
-                  {summitData.current.summits.map(s=>(
-                    <div key={s.summit_id} className="summit-row">
-                      <div className="summit-name">{s.name}</div>
-                      <div className="ride-val">{s.ele ? s.ele+' m' : '—'}</div>
-                      <div><span className="ride-type">{s.osm_type==='peak'?'Gipfel':s.osm_type==='saddle'?'Sattel':'Pass'}</span></div>
-                      <div className="ride-val">{s.visit_count}×</div>
-                      <div className="ride-val">{new Date(s.last_visited).toLocaleDateString(t('date.locale'),{day:'2-digit',month:'short',year:'numeric'})}</div>
+                  {climbData.current.climbs.map((c,i)=>(
+                    <div key={i} className="summit-row">
+                      <div className="summit-name">{c.name}</div>
+                      <div className="ride-val">{c.ele ? c.ele+' m' : '—'}</div>
+                      <div><span className="ride-type">{c.climb_type || 'Passjagd'}</span></div>
+                      <div className="ride-val">{c.visit_count}×</div>
+                      <div className="ride-val">{c.last_visited ? new Date(c.last_visited).toLocaleDateString(t('date.locale'),{day:'2-digit',month:'short',year:'numeric'}) : '—'}</div>
                     </div>
                   ))}
                 </>)}
