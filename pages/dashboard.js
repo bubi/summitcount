@@ -196,7 +196,7 @@ export default function Dashboard() {
       delta: hasPrevYear ? calcDelta(totalTime,prevTotalTime) : null,
       formatAbs: v => fmtTime(v) },
     { label: t('stat.rides'),           value: filteredRides.length,                                unit: '',
-      delta: hasPrevYear ? calcDelta(filteredRides.length,prevFiltered.length) : null,
+      delta: null,
       formatAbs: v => Math.round(v) },
     { label: t('stat.avgSpeed'),        value: (isMetric?avgSpeed:avgSpeed*.621).toFixed(1),        unit: isMetric?t('stat.unit.kmh'):t('stat.unit.mph'),
       delta: hasPrevYear ? calcDelta(isMetric?avgSpeed:avgSpeed*.621, isMetric?prevAvgSpeed:prevAvgSpeed*.621) : null,
