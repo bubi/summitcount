@@ -31,7 +31,7 @@ function DeltaBadge({ delta, formatAbs }) {
 }
 
 const SPORT_LABELS = {
-  Ride:              'Ride',
+  Ride:              'Road',
   VirtualRide:       'Virtual',
   EBikeRide:         'E-Bike',
   GravelRide:        'Gravel',
@@ -335,7 +335,7 @@ export default function Dashboard() {
                 </button>
               ))}
               <div className="sp-right-group">
-                <button className={view==='rides'&&selectedSports.length===0?'sp-btn active':'sp-btn'} onClick={()=>{setView('rides');setSelectedSports([])}}>🚴 Rides</button>
+                <button className={view==='rides'&&selectedSports.length===0?'sp-btn active':'sp-btn'} onClick={()=>{setView('rides');setSelectedSports([])}}>🚴 Fahrten</button>
                 <button className={view==='paesse'?'sp-btn active':'sp-btn'} onClick={()=>setView('paesse')}>
                   ⛰ Pässe & Berge {climbCount > 0 ? `(${climbCount})` : ''}
                 </button>
