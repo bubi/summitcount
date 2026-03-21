@@ -2,16 +2,12 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
 import Link from 'next/link'
-import { initMountainBackground } from '../lib/mountainBackground'
-
 export default function LoginPage() {
   const router = useRouter()
   const { error } = router.query
 
   useEffect(() => {
     fetch('/api/auth/me').then(r => { if (r.ok) router.push('/dashboard') })
-    const cleanup = initMountainBackground('mountain-bg')
-    return cleanup
   }, [])
 
   return (
@@ -22,7 +18,6 @@ export default function LoginPage() {
         <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
       </Head>
       <div className="page">
-        <canvas id="mountain-bg" className="mountain-canvas" />
         <div className="card">
           <div className="logo">SUMMIT<br/>COUNT</div>
           <p className="sub">Karoo · AXS · Strava</p>
@@ -61,9 +56,8 @@ export default function LoginPage() {
         #__next{min-height:100vh}
       `}</style>
       <style jsx>{`
-        .page{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0a0a0a;padding:24px;box-sizing:border-box;position:relative;}
-        .mountain-canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;}
-        .card{background:rgba(17,17,17,0.85);border:1px solid #222;border-radius:12px;padding:48px 40px;text-align:center;max-width:400px;width:100%;position:relative;z-index:1;backdrop-filter:blur(2px);}
+        .page{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0a0a0a;padding:24px;box-sizing:border-box;}
+        .card{background:rgba(17,17,17,0.85);border:1px solid #222;border-radius:12px;padding:48px 40px;text-align:center;max-width:400px;width:100%;}
         .logo{font-family:'Bebas Neue',sans-serif;font-size:3.5rem;letter-spacing:.04em;line-height:.9;color:#e8ff47;margin-bottom:8px}
         .sub{font-family:'DM Mono',monospace;font-size:.7rem;color:#555;letter-spacing:.15em;text-transform:uppercase}
         .divider{height:1px;background:#222;margin:28px 0}
