@@ -1,7 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
-import Link from 'next/link'
 import { initMountainBackground } from '../lib/mountainBackground'
 import { useTranslation } from '../lib/i18n'
 
@@ -320,7 +319,7 @@ export default function Dashboard() {
                 </svg>
                 Powered by Strava
               </a>
-              <Link href="/privacy" className="privacy-footer-link">{t('footer.privacy')}</Link>
+              <a href="/privacy" className="privacy-footer-link">{t('footer.privacy')}</a>
             </div>
           </>
         )}
