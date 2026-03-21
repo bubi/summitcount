@@ -1,0 +1,56 @@
+{
+  "login.desc": "Deine jährlichen Ride-Stats — Distanz, Höhenmeter, Zeit.\nVerbinde einmal, Daten bleiben gespeichert.",
+  "login.fine": "Nur Lesezugriff auf deine Aktivitäten.\nKeine Daten werden an Dritte weitergegeben.",
+  "login.privacyLink": "Datenschutz",
+
+  "loading.init": "INITIALISIERE…",
+  "loading.auth": "AUTHENTIFIZIERE…",
+  "loading.activities": "LADE AKTIVITÄTEN…",
+
+  "sync.badge.full": "✓ {count} Rides geladen",
+  "sync.badge.new": "+{count} neu",
+  "sync.badge.deleted": "{count} gelöscht",
+  "sync.badge.upToDate": "✓ Aktuell",
+  "sync.button": "Sync",
+  "logout": "Logout",
+
+  "sport.all": "Alle",
+
+  "stat.totalDistance": "Gesamtstrecke",
+  "stat.elevationGained": "Höhenmeter",
+  "stat.totalTime": "Gesamtzeit",
+  "stat.rides": "Rides",
+  "stat.avgSpeed": "Ø Geschwindigkeit",
+  "stat.avgDistance": "Ø Distanz",
+  "stat.unit.km": "KM",
+  "stat.unit.miles": "MILES",
+  "stat.unit.meters": "METER",
+  "stat.unit.feet": "FUSS",
+  "stat.unit.hrsMin": "STD / MIN",
+  "stat.unit.activities": "AKTIVITÄTEN",
+  "stat.unit.kmh": "KM/H",
+  "stat.unit.mph": "MPH",
+  "stat.unit.kmRide": "KM / RIDE",
+  "stat.unit.miRide": "MI / RIDE",
+
+  "chart.title": "Monatsübersicht",
+  "chart.tab.distance": "Distanz",
+  "chart.tab.elevation": "Höhenmeter",
+  "chart.tab.rides": "Rides",
+  "chart.tooltip.rides": "{count} Rides",
+
+  "rides.title.all": "Alle Rides — {count} Aktivitäten",
+  "rides.title.filtered": "{sports} — {count} Aktivitäten",
+  "rides.col.activity": "Aktivität",
+  "rides.col.dist": "Dist",
+  "rides.col.elev": "Hm",
+  "rides.col.time": "Zeit",
+  "rides.col.type": "Typ",
+
+  "empty.message": "Keine Rides gefunden. Sync läuft beim ersten Laden automatisch.",
+  "empty.syncButton": "Jetzt synchronisieren →",
+
+  "footer.privacy": "Datenschutz",
+
+  "date.locale": "de-AT"
+}

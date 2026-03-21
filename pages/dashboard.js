@@ -3,6 +3,7 @@ import { useRouter } from 'next/router'
 import Head from 'next/head'
 import Link from 'next/link'
 import { initMountainBackground } from '../lib/mountainBackground'
+import { useTranslation } from '../lib/i18n'
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 const fmtDist  = (m,u) => u==='metric' ? (m/1000).toFixed(1)+' km' : (m/1609.34).toFixed(1)+' mi'
@@ -24,6 +25,7 @@ const sportLabel = t => SPORT_LABELS[t] || t || 'Ride'
 
 export default function Dashboard() {
   const router = useRouter()
+  const { t, lang, setLang } = useTranslation()
   const [user, setUser]               = useState(null)
   const [activities, setActivities]   = useState([])
   const [loading, setLoading]         = useState(true)
@@ -34,38 +36,35 @@ export default function Dashboard() {
   const [unit, setUnit]               = useState('metric')
   const [chartMode, setChartMode]     = useState('dist')
   const [error, setError]             = useState('')
-  const [loadStatus, setLoadStatus]   = useState('INITIALISIERE…')
+  const [loadStatus, setLoadStatus]   = useState('loading.init')
   const mountainCleanup               = useRef(null)
 
   useEffect(() => {
     init()
-    // Start background — works for both loading and dashboard states
-    // We init after a tick so the canvas is in the DOM
-    const t = setTimeout(() => {
+    const timer = setTimeout(() => {
       mountainCleanup.current = initMountainBackground('mountain-bg')
     }, 50)
     return () => {
-      clearTimeout(t)
+      clearTimeout(timer)
       if (mountainCleanup.current) mountainCleanup.current()
     }
   }, [])
 
-  // Re-init canvas when loading state changes (different DOM render)
   useEffect(() => {
-    const t = setTimeout(() => {
+    const timer = setTimeout(() => {
       if (mountainCleanup.current) mountainCleanup.current()
       mountainCleanup.current = initMountainBackground('mountain-bg')
     }, 50)
-    return () => clearTimeout(t)
+    return () => clearTimeout(timer)
   }, [loading])
 
   async function init() {
-    setLoadStatus('AUTHENTIFIZIERE…')
+    setLoadStatus('loading.auth')
     const meRes = await fetch('/api/auth/me')
     if (!meRes.ok) { router.push('/'); return }
     setUser(await meRes.json())
 
-    setLoadStatus('LADE AKTIVITÄTEN…')
+    setLoadStatus('loading.activities')
     const actRes = await fetch('/api/activities')
     if (actRes.ok) {
       const { activities: acts } = await actRes.json()
@@ -148,7 +147,7 @@ export default function Dashboard() {
                 strokeLinecap="round" strokeDasharray="40 124" className="spin-circle"/>
             </svg>
           </div>
-          <div className="loading-status">{loadStatus}</div>
+          <div className="loading-status">{t(loadStatus)}</div>
         </div>
       </div>
       <style jsx global>{`*{margin:0;padding:0;box-sizing:border-box}html,body,#__next{height:100%;background:#0a0a0a}`}</style>
@@ -191,20 +190,24 @@ export default function Dashboard() {
               </div>
             </div>
             <div className="actions">
+              <div className="lang-toggle">
+                <button className={lang==='de'?'flag active':'flag'} onClick={()=>setLang('de')}>🇩🇪</button>
+                <button className={lang==='en'?'flag active':'flag'} onClick={()=>setLang('en')}>🇬🇧</button>
+              </div>
               {syncInfo && !syncing && (
                 <span className="sync-badge">
                   {syncInfo.isFullSync
-                    ? `✓ ${syncInfo.synced} rides geladen`
+                    ? t('sync.badge.full', { count: syncInfo.synced })
                     : [
-                        syncInfo.synced > 0 && `+${syncInfo.synced} neu`,
-                        syncInfo.deleted > 0 && `${syncInfo.deleted} gelöscht`,
-                      ].filter(Boolean).join(' · ') || '✓ Aktuell'}
+                        syncInfo.synced > 0 && t('sync.badge.new', { count: syncInfo.synced }),
+                        syncInfo.deleted > 0 && t('sync.badge.deleted', { count: syncInfo.deleted }),
+                      ].filter(Boolean).join(' · ') || t('sync.badge.upToDate')}
                 </span>
               )}
               <button className="btn-sync" onClick={doSync} disabled={syncing}>
-                {syncing ? '⟳' : '↻'} Sync
+                {syncing ? '⟳' : '↻'} {t('sync.button')}
               </button>
-              <a href="/api/auth/logout" className="btn-danger">Logout</a>
+              <a href="/api/auth/logout" className="btn-danger">{t('logout')}</a>
             </div>
           </div>
         </div>
@@ -213,8 +216,8 @@ export default function Dashboard() {
 
         {activities.length === 0 && !syncing ? (
           <div className="empty">
-            <p>Keine Rides gefunden. Sync läuft beim ersten Laden automatisch.</p>
-            <button className="btn" onClick={doSync}>Jetzt synchronisieren →</button>
+            <p>{t('empty.message')}</p>
+            <button className="btn" onClick={doSync}>{t('empty.syncButton')}</button>
           </div>
         ) : (
           <>
@@ -230,7 +233,7 @@ export default function Dashboard() {
 
             {availableSports.length > 1 && (
               <div className="sport-nav">
-                <button className={selectedSports.length===0?'sp-btn active':'sp-btn'} onClick={()=>setSelectedSports([])}>Alle</button>
+                <button className={selectedSports.length===0?'sp-btn active':'sp-btn'} onClick={()=>setSelectedSports([])}>{t('sport.all')}</button>
                 {availableSports.map(s=>(
                   <button key={s} className={selectedSports.includes(s)?'sp-btn active':'sp-btn'} onClick={()=>toggleSport(s)}>
                     {sportLabel(s)}
@@ -241,12 +244,12 @@ export default function Dashboard() {
 
             <div className="stats-grid">
               {[
-                { label:'Total Distance',   value: fmtVal(totalDist,unit),                             unit: unit==='metric'?'KM':'MILES' },
-                { label:'Elevation Gained', value: fmtElevV(totalElev,unit).toLocaleString(),          unit: unit==='metric'?'METERS':'FEET' },
-                { label:'Total Ride Time',  value: fmtTime(totalTime),                                 unit: 'HRS / MIN' },
-                { label:'Rides Completed',  value: filteredRides.length,                               unit: 'ACTIVITIES' },
-                { label:'Avg Speed',        value: (unit==='metric'?avgSpeed:avgSpeed*.621).toFixed(1), unit: unit==='metric'?'KM/H':'MPH' },
-                { label:'Avg Distance',     value: filteredRides.length>0?fmtVal(totalDist/filteredRides.length,unit):'0', unit: unit==='metric'?'KM / RIDE':'MI / RIDE' },
+                { label: t('stat.totalDistance'),   value: fmtVal(totalDist,unit),                              unit: unit==='metric'?t('stat.unit.km'):t('stat.unit.miles') },
+                { label: t('stat.elevationGained'), value: fmtElevV(totalElev,unit).toLocaleString(),           unit: unit==='metric'?t('stat.unit.meters'):t('stat.unit.feet') },
+                { label: t('stat.totalTime'),       value: fmtTime(totalTime),                                  unit: t('stat.unit.hrsMin') },
+                { label: t('stat.rides'),           value: filteredRides.length,                                unit: t('stat.unit.activities') },
+                { label: t('stat.avgSpeed'),        value: (unit==='metric'?avgSpeed:avgSpeed*.621).toFixed(1), unit: unit==='metric'?t('stat.unit.kmh'):t('stat.unit.mph') },
+                { label: t('stat.avgDistance'),     value: filteredRides.length>0?fmtVal(totalDist/filteredRides.length,unit):'0', unit: unit==='metric'?t('stat.unit.kmRide'):t('stat.unit.miRide') },
               ].map(c=>(
                 <div key={c.label} className="stat-card">
                   <div className="stat-label">{c.label}</div>
@@ -257,9 +260,9 @@ export default function Dashboard() {
             </div>
 
             <div className="chart-box">
-              <div className="section-title">Monthly Breakdown</div>
+              <div className="section-title">{t('chart.title')}</div>
               <div className="chart-tabs">
-                {[['dist','Distance'],['elev','Elevation'],['rides','Rides']].map(([m,l])=>(
+                {[['dist',t('chart.tab.distance')],['elev',t('chart.tab.elevation')],['rides',t('chart.tab.rides')]].map(([m,l])=>(
                   <button key={m} className={chartMode===m?'ct active':'ct'} onClick={()=>setChartMode(m)}>{l}</button>
                 ))}
               </div>
@@ -270,7 +273,7 @@ export default function Dashboard() {
                     ? (unit==='metric'?val.toFixed(0)+'km':(val*.621).toFixed(0)+'mi')
                     : chartMode==='elev'
                     ? (unit==='metric'?Math.round(m.elev)+'m':Math.round(m.elev*3.28)+'ft')
-                    : val+' rides'
+                    : t('chart.tooltip.rides', { count: val })
                   return (
                     <div key={i} className="bar-wrap">
                       <div className="bar-tip">{tip}</div>
@@ -284,19 +287,23 @@ export default function Dashboard() {
 
             <div className="section-title">
               {selectedSports.length > 0
-                ? `${selectedSports.map(sportLabel).join(', ')} — ${sortedRides.length} activities`
-                : `All Rides — ${sortedRides.length} activities`}
+                ? t('rides.title.filtered', { sports: selectedSports.map(sportLabel).join(', '), count: sortedRides.length })
+                : t('rides.title.all', { count: sortedRides.length })}
             </div>
             <div className="rides-list">
               <div className="rides-header">
-                <span>Activity</span><span>Dist</span><span>Elev</span><span>Time</span><span>Type</span>
+                <span>{t('rides.col.activity')}</span>
+                <span>{t('rides.col.dist')}</span>
+                <span>{t('rides.col.elev')}</span>
+                <span>{t('rides.col.time')}</span>
+                <span>{t('rides.col.type')}</span>
               </div>
               {sortedRides.map(a=>(
                 <div key={a.id} className="ride-row">
                   <div>
                     <a href={`https://www.strava.com/activities/${a.strava_activity_id}`}
                       target="_blank" rel="noreferrer" className="ride-name">{a.name}</a>
-                    <div className="ride-date">{new Date(a.start_date).toLocaleDateString('de-AT',{day:'2-digit',month:'short',year:'numeric'})}</div>
+                    <div className="ride-date">{new Date(a.start_date).toLocaleDateString(t('date.locale'),{day:'2-digit',month:'short',year:'numeric'})}</div>
                   </div>
                   <div className="ride-val">{fmtDist(a.distance_m,unit)}</div>
                   <div className="ride-val">{fmtElev(a.elevation_gain_m,unit)}</div>
@@ -313,7 +320,7 @@ export default function Dashboard() {
                 </svg>
                 Powered by Strava
               </a>
-              <a href="/privacy" className="privacy-footer-link">Privacy Policy</a>
+              <Link href="/privacy" className="privacy-footer-link">{t('footer.privacy')}</Link>
             </div>
           </>
         )}
@@ -337,6 +344,10 @@ export default function Dashboard() {
         .user-name{font-family:'DM Mono',monospace;font-size:.78rem;color:var(--accent);text-align:right}
         .user-sub{font-size:.68rem;color:var(--muted);margin-top:2px;text-align:right}
         .actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+        .lang-toggle{display:flex;gap:2px;align-items:center}
+        .flag{background:transparent;border:none;cursor:pointer;font-size:1.2rem;opacity:0.3;padding:2px 4px;transition:opacity .15s;line-height:1}
+        .flag.active{opacity:1}
+        .flag:hover{opacity:0.65}
         .sync-badge{font-family:'DM Mono',monospace;font-size:.75rem;color:#4caf50;padding:5px 10px;border:1px solid #4caf5044;border-radius:4px}
         .btn-sync{font-family:'DM Mono',monospace;font-size:.72rem;padding:5px 10px;border-radius:3px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s}
         .btn-sync:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}

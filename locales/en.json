@@ -1,0 +1,56 @@
+{
+  "login.desc": "Your annual ride stats — distance, elevation, time.\nConnect once, data stays saved.",
+  "login.fine": "Read-only access to your activities.\nNo data is shared with third parties.",
+  "login.privacyLink": "Privacy Policy",
+
+  "loading.init": "INITIALIZING…",
+  "loading.auth": "AUTHENTICATING…",
+  "loading.activities": "LOADING ACTIVITIES…",
+
+  "sync.badge.full": "✓ {count} rides loaded",
+  "sync.badge.new": "+{count} new",
+  "sync.badge.deleted": "{count} deleted",
+  "sync.badge.upToDate": "✓ Up to date",
+  "sync.button": "Sync",
+  "logout": "Logout",
+
+  "sport.all": "All",
+
+  "stat.totalDistance": "Total Distance",
+  "stat.elevationGained": "Elevation Gained",
+  "stat.totalTime": "Total Ride Time",
+  "stat.rides": "Rides Completed",
+  "stat.avgSpeed": "Avg Speed",
+  "stat.avgDistance": "Avg Distance",
+  "stat.unit.km": "KM",
+  "stat.unit.miles": "MILES",
+  "stat.unit.meters": "METERS",
+  "stat.unit.feet": "FEET",
+  "stat.unit.hrsMin": "HRS / MIN",
+  "stat.unit.activities": "ACTIVITIES",
+  "stat.unit.kmh": "KM/H",
+  "stat.unit.mph": "MPH",
+  "stat.unit.kmRide": "KM / RIDE",
+  "stat.unit.miRide": "MI / RIDE",
+
+  "chart.title": "Monthly Breakdown",
+  "chart.tab.distance": "Distance",
+  "chart.tab.elevation": "Elevation",
+  "chart.tab.rides": "Rides",
+  "chart.tooltip.rides": "{count} rides",
+
+  "rides.title.all": "All Rides — {count} activities",
+  "rides.title.filtered": "{sports} — {count} activities",
+  "rides.col.activity": "Activity",
+  "rides.col.dist": "Dist",
+  "rides.col.elev": "Elev",
+  "rides.col.time": "Time",
+  "rides.col.type": "Type",
+
+  "empty.message": "No rides found. Sync runs automatically on first load.",
+  "empty.syncButton": "Sync now →",
+
+  "footer.privacy": "Privacy Policy",
+
+  "date.locale": "en-GB"
+}
