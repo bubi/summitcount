@@ -279,7 +279,7 @@ export default function Dashboard() {
             <div className="user-info">
               {user?.profileImg
                 ? <img src={user.profileImg} className="avatar" alt="avatar" />
-                : <div className="avatar-ph">🚴</div>}
+                : <div className="avatar-ph"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="5.5" cy="17.5" r="3"/><circle cx="18.5" cy="17.5" r="3"/><path d="M5.5 17.5l3.5-9h5l2.5 5H9M15 8.5l2 4.5"/><circle cx="14" cy="6" r="1" fill="currentColor" stroke="none"/></svg></div>}
               <div>
                 <div className="user-name">{user?.firstname} {user?.lastname}</div>
                 <div className="user-sub">{[user?.city, user?.country].filter(Boolean).join(', ')}</div>
@@ -287,8 +287,8 @@ export default function Dashboard() {
             </div>
             <div className="actions">
               <div className="lang-toggle">
-                <button className={lang==='de'?'flag active':'flag'} onClick={()=>setLang('de')}>🇩🇪</button>
-                <button className={lang==='en'?'flag active':'flag'} onClick={()=>setLang('en')}>🇬🇧</button>
+                <button className={lang==='de'?'flag active':'flag'} onClick={()=>setLang('de')}>DE</button>
+                <button className={lang==='en'?'flag active':'flag'} onClick={()=>setLang('en')}>EN</button>
               </div>
               {syncInfo && !syncing && (
                 <span className="sync-badge">
@@ -335,7 +335,7 @@ export default function Dashboard() {
                 </button>
               ))}
               <div className="sp-right-group">
-                <button className={view==='rides'&&selectedSports.length===0?'sp-btn active':'sp-btn'} onClick={()=>{setView('rides');setSelectedSports([])}}>🚴 Fahrten</button>
+                <button className={view==='rides'&&selectedSports.length===0?'sp-btn active':'sp-btn'} onClick={()=>{setView('rides');setSelectedSports([])}}><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{marginRight:'5px',verticalAlign:'middle'}}><circle cx="5.5" cy="17.5" r="3"/><circle cx="18.5" cy="17.5" r="3"/><path d="M5.5 17.5l3.5-9h5l2.5 5H9M15 8.5l2 4.5"/><circle cx="14" cy="6" r="1" fill="currentColor" stroke="none"/></svg>{t('rides.button')}</button>
                 <button className={view==='paesse'?'sp-btn active':'sp-btn'} onClick={()=>setView('paesse')}>
                   {t('paesse.button')} {climbCount > 0 ? `(${climbCount})` : ''}
                 </button>
@@ -552,9 +552,9 @@ export default function Dashboard() {
         .user-sub{font-size:.68rem;color:var(--muted);margin-top:2px;text-align:right}
         .actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
         .lang-toggle{display:flex;gap:2px;align-items:center}
-        .flag{background:transparent;border:none;cursor:pointer;font-size:1.2rem;opacity:0.3;padding:2px 4px;transition:opacity .15s;line-height:1}
-        .flag.active{opacity:1}
-        .flag:hover{opacity:0.65}
+        .flag{background:transparent;border:none;cursor:pointer;font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:.1em;color:var(--muted);padding:3px 6px;transition:color .15s;line-height:1}
+        .flag.active{color:var(--text)}
+        .flag:hover{color:var(--text)}
         .sync-badge{font-family:'DM Mono',monospace;font-size:.75rem;color:#4caf50;padding:5px 10px;border:1px solid #4caf5044;border-radius:4px}
         .btn-sync{font-family:'DM Mono',monospace;font-size:.72rem;padding:5px 10px;border-radius:3px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s}
         .btn-sync:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
