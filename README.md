@@ -123,8 +123,6 @@ node scripts/register-webhook.js
 | `STRAVA_CLIENT_SECRET` | Strava API app Client Secret |
 | `SUPABASE_URL` | Supabase project URL |
 | `SUPABASE_SERVICE_KEY` | Supabase service role key (server-side only) |
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL (public) |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key (public) |
 | `NEXT_PUBLIC_APP_URL` | Your deployment URL |
 | `SESSION_SECRET` | Encryption key for session cookies |
 | `STRAVA_WEBHOOK_VERIFY_TOKEN` | Random token for webhook verification |
