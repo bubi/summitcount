@@ -1,6 +1,7 @@
 import { supabaseAdmin } from '../../lib/supabase'
 import { refreshAccessToken, stravaGet, fetchActivity } from '../../lib/strava'
 import { parseQualdichClimbs } from '../../lib/qualdich'
+import { trackApiCalls } from '../../lib/rate-limit'
 
 // Strava sends a GET to verify the webhook endpoint
 // and a POST for each event (activity created/updated/deleted, athlete deauthorized)
@@ -71,6 +72,7 @@ async function handleEvent(req, res) {
 
   if (aspect_type === 'create' || aspect_type === 'update') {
     await handleActivityUpsert(db, user.id, object_id, accessToken)
+    await trackApiCalls(db, 1) // 1 Strava GET for activity detail
   } else if (aspect_type === 'delete') {
     await handleActivityDelete(db, user.id, object_id)
   }

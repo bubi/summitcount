@@ -49,6 +49,7 @@ export default function Dashboard() {
   const [loading, setLoading]         = useState(true)
   const [syncing, setSyncing]         = useState(false)
   const [syncInfo, setSyncInfo]       = useState(null)
+  const [syncJob, setSyncJob]         = useState(null)
   const [year, setYear]               = useState(new Date().getFullYear())
   const [selectedSports, setSelectedSports] = useState([])
   const [unit, setUnit]               = useState('metric')
@@ -74,10 +75,31 @@ export default function Dashboard() {
         body: JSON.stringify({ year }),
       })
       const data = await res.json()
-      setTitleSync({ status: 'done', result: data })
+      if (!res.ok) throw new Error(data.error)
+      // Poll for completion
+      pollTitleSyncStatus()
     } catch (e) {
       setTitleSync({ status: 'idle', result: null })
     }
+  }
+
+  async function pollTitleSyncStatus() {
+    const poll = async () => {
+      try {
+        const res = await fetch('/api/sync-status')
+        if (!res.ok) return
+        const { job } = await res.json()
+        if (job && job.job_type === 'title_sync' && (job.status === 'pending' || job.status === 'running')) {
+          setTitleSync({ status: 'syncing', result: { done: job.tasks_done, total: job.tasks_total } })
+          setTimeout(poll, 3000)
+        } else {
+          setTitleSync({ status: 'done', result: { synced: job?.result?.total_tasks || 0 } })
+          // Refresh climbs
+          fetchClimbs(year)
+        }
+      } catch { setTitleSync({ status: 'idle', result: null }) }
+    }
+    poll()
   }
 
   async function init() {
@@ -114,18 +136,40 @@ export default function Dashboard() {
       const res = await fetch('/api/sync', { method: 'POST' })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
-      setSyncInfo(data)
-      const actRes = await fetch('/api/activities')
-      if (actRes.ok) {
-        const { activities: acts } = await actRes.json()
-        setActivities(acts)
-        if (acts.length > 0) {
-          const years = [...new Set(acts.map(a => new Date(a.start_date).getFullYear()))].sort((a,b)=>b-a)
-          setYear(prev => years.includes(prev) ? prev : years[0])
+      // Start polling for job status
+      pollSyncStatus()
+    } catch(e) { setError(e.message); setSyncing(false) }
+  }
+
+  async function pollSyncStatus() {
+    const poll = async () => {
+      try {
+        const res = await fetch('/api/sync-status')
+        if (!res.ok) return
+        const { job } = await res.json()
+        setSyncJob(job)
+        if (job && (job.status === 'pending' || job.status === 'running')) {
+          setTimeout(poll, 3000)
+        } else {
+          // Sync complete — refresh data
+          setSyncing(false)
+          if (job?.status === 'completed') {
+            setSyncInfo({ synced: job.result?.total_tasks || 0, deleted: job.result?.deleted || 0 })
+          }
+          const actRes = await fetch('/api/activities')
+          if (actRes.ok) {
+            const { activities: acts } = await actRes.json()
+            setActivities(acts)
+            if (acts.length > 0) {
+              const years = [...new Set(acts.map(a => new Date(a.start_date).getFullYear()))].sort((a,b)=>b-a)
+              setYear(prev => years.includes(prev) ? prev : years[0])
+            }
+          }
+          fetchClimbs(year)
         }
-      }
-    } catch(e) { setError(e.message) }
-    setSyncing(false)
+      } catch { setSyncing(false) }
+    }
+    poll()
   }
 
   function toggleSport(sport) {
@@ -278,14 +322,19 @@ export default function Dashboard() {
                 <button className={lang==='de'?'flag active':'flag'} onClick={()=>setLang('de')}>DE</button>
                 <button className={lang==='en'?'flag active':'flag'} onClick={()=>setLang('en')}>EN</button>
               </div>
+              {syncing && syncJob && (
+                <span className="sync-badge sync-badge-progress">
+                  ⟳ {syncJob.tasks_done || 0}/{syncJob.tasks_total || '?'}
+                </span>
+              )}
               {syncInfo && !syncing && (
                 <span className="sync-badge">
-                  {syncInfo.isFullSync
-                    ? t('sync.badge.full', { count: syncInfo.synced })
-                    : [
+                  {syncInfo.synced > 0 || syncInfo.deleted > 0
+                    ? [
                         syncInfo.synced > 0 && t('sync.badge.new', { count: syncInfo.synced }),
                         syncInfo.deleted > 0 && t('sync.badge.deleted', { count: syncInfo.deleted }),
-                      ].filter(Boolean).join(' · ') || t('sync.badge.upToDate')}
+                      ].filter(Boolean).join(' · ')
+                    : t('sync.badge.upToDate')}
                 </span>
               )}
               <button className="btn-sync" onClick={doSync} disabled={syncing}>
@@ -463,10 +512,14 @@ export default function Dashboard() {
                       </button>
                     )}
                     {titleSync.status === 'syncing' && (
-                      <span className="title-sync-info">Synchronisiere {year}…</span>
+                      <span className="title-sync-info">
+                        {titleSync.result?.total
+                          ? `⟳ ${titleSync.result.done || 0}/${titleSync.result.total}`
+                          : `Synchronisiere ${year}…`}
+                      </span>
                     )}
                     {titleSync.status === 'done' && (
-                      <span className="title-sync-ok">✓ {titleSync.result?.synced} Aktivitäten getriggert</span>
+                      <span className="title-sync-ok">✓ {titleSync.result?.synced || 0} Aktivitäten getriggert</span>
                     )}
                   </div>
                 )}
@@ -604,6 +657,7 @@ export default function Dashboard() {
         .flag.active{color:var(--text)}
         .flag:hover{color:var(--text)}
         .sync-badge{font-family:'DM Mono',monospace;font-size:.75rem;color:#4caf50;padding:5px 10px;border:1px solid #4caf5044;border-radius:4px}
+        .sync-badge-progress{color:var(--accent);border-color:rgba(232,255,71,0.25);animation:pulse 1.2s infinite}
         .btn-sync{font-family:'DM Mono',monospace;font-size:.72rem;padding:5px 10px;border-radius:3px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s}
         .btn-sync:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
         .btn-sync:disabled{opacity:.4;cursor:default}
