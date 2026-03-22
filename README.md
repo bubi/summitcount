@@ -9,6 +9,7 @@ Personal cycling statistics dashboard powered by Strava. Track your annual dista
 - **Monthly Breakdown** — Bar charts for distance, elevation, and ride count
 - **Mountain Passes** — Automatic extraction of climbs from activity descriptions (quäldich format)
 - **Real-time Sync** — Strava webhooks keep your data up to date automatically
+- **Rate-Limit Queue** — Background job queue respects Strava API limits across all users
 - **Mobile Responsive** — Works on desktop and phone
 - **Bilingual** — German and English UI
 - **Demo Mode** — Try without connecting Strava
@@ -33,9 +34,12 @@ pages/
     auth/               login, callback, logout, me, demo
     activities.js       Fetch stored activities
     climbs.js           Query quäldich climbs
-    sync.js             Full/delta sync from Strava
+    sync.js             Enqueue sync job
+    sync-status.js      Poll sync job progress
     webhook.js          Strava webhook handler
-    title-sync.js       Bulk title-tag sync for Strava activities
+    title-sync.js       Enqueue title-tag sync job
+    cron/
+      process-queue.js  Cron worker — processes sync queue respecting rate limits
 
 lib/
   strava.js             Strava API client (fetch, update, token refresh)
@@ -43,6 +47,8 @@ lib/
   session.js            iron-session config
   i18n.js               i18n context provider
   qualdich.js           Parse quäldich climb notes from descriptions
+  queue.js              Sync job queue (enqueue, status, token refresh)
+  rate-limit.js         Strava rate limit tracking
   demoData.js           Demo activities for preview mode
   mountainBackground.js Canvas mountain animation (Alpenglühen)
 
@@ -51,9 +57,10 @@ locales/
   en.json               English translations
 
 scripts/
-  supabase-schema.sql   Database schema (run once)
-  register-webhook.js   Register Strava webhook subscription
-  delete-webhook.js     Delete Strava webhook subscription
+  supabase-schema.sql         Database schema (run once)
+  migration-sync-queue.sql    Add sync queue tables (run on existing DBs)
+  register-webhook.js         Register Strava webhook subscription
+  delete-webhook.js           Delete Strava webhook subscription
 ```
 
 ## Setup
@@ -126,12 +133,17 @@ node scripts/register-webhook.js
 | `NEXT_PUBLIC_APP_URL` | Your deployment URL |
 | `SESSION_SECRET` | Encryption key for session cookies |
 | `STRAVA_WEBHOOK_VERIFY_TOKEN` | Random token for webhook verification |
+| `CRON_SECRET` | Secret for cron endpoint authentication |
 
 ## How Sync Works
 
-- **First login** — All cycling activities are fetched from Strava and stored in Supabase
-- **Subsequent syncs** — Only activities since `last_synced_at` are fetched (delta sync)
-- **Webhooks** — When you create, update, or delete an activity on Strava, the webhook handler processes it automatically
+SummitCount uses a background job queue to respect Strava's API rate limits (100 req/15min, 1000 req/day):
+
+- **First login** — A full sync job is queued. The cron worker fetches activities in batches, respecting rate limits
+- **Subsequent syncs** — Only activities since `last_synced_at` are queued (delta sync)
+- **Webhooks** — Activity create/update/delete events are processed immediately (1 API call each)
+- **Background processing** — Tasks are processed while the dashboard polls for status (no Pro plan needed)
+- **Multi-user safe** — Tasks are claimed atomically (`FOR UPDATE SKIP LOCKED`), preventing double-processing
 - **Deauthorization** — If you revoke access via Strava, all your data is deleted automatically
 
 ## Mountain Passes (quäldich)
