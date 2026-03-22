@@ -1,6 +1,6 @@
 -- ============================================================
--- Cycling Odometer — Supabase Schema
--- Einmal im Supabase SQL Editor ausführen
+-- SummitCount — Supabase Schema
+-- Run once in the Supabase SQL Editor
 -- ============================================================
 
 -- Users table
@@ -36,6 +36,7 @@ create table if not exists activities (
   year                integer,
   month               integer,
   summary_polyline    text,
+  description         text,
   created_at          timestamptz default now()
 );
 
@@ -58,35 +59,10 @@ create table if not exists qualdich_climbs (
 create index if not exists idx_qualdich_activity on qualdich_climbs(activity_id);
 create index if not exists idx_qualdich_name     on qualdich_climbs(name);
 
--- Summits cache (OSM nodes)
-create table if not exists summits (
-  id        uuid primary key default gen_random_uuid(),
-  osm_id    bigint unique not null,
-  name      text,
-  ele       integer,
-  osm_type  text,             -- 'peak' | 'mountain_pass' | 'saddle'
-  lat       float not null,
-  lon       float not null,
-  created_at timestamptz default now()
-);
-create index if not exists idx_summits_latlon on summits(lat, lon);
-
--- Activity ↔ Summit mapping
-create table if not exists activity_summits (
-  id          uuid primary key default gen_random_uuid(),
-  activity_id uuid not null references activities(id) on delete cascade,
-  summit_id   uuid not null references summits(id) on delete cascade,
-  visited_at  timestamptz,
-  unique(activity_id, summit_id)
-);
-create index if not exists idx_act_summits_activity on activity_summits(activity_id);
-create index if not exists idx_act_summits_summit   on activity_summits(summit_id);
-
 -- Row Level Security (RLS) — users can only see their own data
-alter table users             enable row level security;
-alter table activities        enable row level security;
-alter table summits           enable row level security;
-alter table activity_summits  enable row level security;
+alter table users           enable row level security;
+alter table activities      enable row level security;
+alter table qualdich_climbs enable row level security;
 
 -- Service role bypasses RLS (our API uses service role, so this is fine)
 -- No additional policies needed for server-side access

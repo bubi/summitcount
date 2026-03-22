@@ -14,7 +14,7 @@ if (!CLIENT_ID || !CLIENT_SECRET || !CALLBACK_URL || !VERIFY_TOKEN) {
   console.error('')
   console.error('STRAVA_CLIENT_ID=xxx \\')
   console.error('STRAVA_CLIENT_SECRET=xxx \\')
-  console.error('NEXT_PUBLIC_APP_URL=https://karoo-odometer.vercel.app \\')
+  console.error('NEXT_PUBLIC_APP_URL=https://summitcount.vercel.app \\')
   console.error('STRAVA_WEBHOOK_VERIFY_TOKEN=summitcount_webhook_2026 \\')
   console.error('node register-webhook.js')
   process.exit(1)
