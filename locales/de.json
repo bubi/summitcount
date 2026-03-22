@@ -20,6 +20,8 @@
   "stat.elevationGained": "Höhenmeter",
   "stat.totalTime": "Gesamtzeit",
   "stat.rides": "Aktivitäten",
+  "stat.combined": "Aktivitäten & Pässe",
+  "stat.unit.rides": "Fahrten",
   "stat.avgSpeed": "Ø Geschwindigkeit",
   "stat.avgDistance": "Ø Distanz",
   "stat.unit.km": "KM",

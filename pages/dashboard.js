@@ -195,18 +195,12 @@ export default function Dashboard() {
     { label: t('stat.totalTime'),       value: fmtTime(totalTime),                                  unit: t('stat.unit.hrsMin'),
       delta: hasPrevYear ? calcDelta(totalTime,prevTotalTime) : null,
       formatAbs: v => fmtTime(v) },
-    { label: t('stat.rides'),           value: filteredRides.length,                                unit: '',
-      delta: null,
-      formatAbs: v => Math.round(v) },
     { label: t('stat.avgSpeed'),        value: (isMetric?avgSpeed:avgSpeed*.621).toFixed(1),        unit: isMetric?t('stat.unit.kmh'):t('stat.unit.mph'),
       delta: hasPrevYear ? calcDelta(isMetric?avgSpeed:avgSpeed*.621, isMetric?prevAvgSpeed:prevAvgSpeed*.621) : null,
       formatAbs: v => v.toFixed(1)+(isMetric?' km/h':' mph') },
     { label: t('stat.avgDistance'),     value: filteredRides.length>0?fmtVal(currAvgDist,unit):'0', unit: isMetric?t('stat.unit.kmRide'):t('stat.unit.miRide'),
       delta: hasPrevYear&&prevAvgDist>0 ? calcDelta(currAvgDist,prevAvgDist) : null,
       formatAbs: v => fmtVal(v,unit)+(isMetric?' km':' mi') },
-    { label: t('paesse.label'),           value: climbCount,                                           unit: '',
-      delta: null,
-      formatAbs: v => Math.round(v) },
   ]
 
   const monthly = MONTHS.map((_,i) => {
@@ -326,6 +320,9 @@ export default function Dashboard() {
                 </button>
               ))}
             </div>
+            <select className="year-select" value={year} onChange={e=>{ setYear(Number(e.target.value)); setSelectedSports([]); }}>
+              {years.map(y=><option key={y} value={y}>{y}</option>)}
+            </select>
 
             <div className="sport-nav">
               <button className={view==='rides'&&selectedSports.length===0?'sp-btn active':'sp-btn'} onClick={()=>{setView('rides');setSelectedSports([])}}>{t('sport.all')}</button>
@@ -334,15 +331,23 @@ export default function Dashboard() {
                   {sportLabel(s)}
                 </button>
               ))}
-              <div className="sp-right-group">
-                <button className={view==='rides'&&selectedSports.length===0?'sp-btn active':'sp-btn'} onClick={()=>{setView('rides');setSelectedSports([])}}><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{marginRight:'5px',verticalAlign:'middle'}}><circle cx="5.5" cy="17.5" r="3"/><circle cx="18.5" cy="17.5" r="3"/><path d="M5.5 17.5l3.5-9h5l2.5 5H9M15 8.5l2 4.5"/><circle cx="14" cy="6" r="1" fill="currentColor" stroke="none"/></svg>{t('rides.button')}</button>
-                <button className={view==='paesse'?'sp-btn active':'sp-btn'} onClick={()=>setView('paesse')}>
-                  {t('paesse.button')} {climbCount > 0 ? `(${climbCount})` : ''}
-                </button>
-              </div>
             </div>
 
             <div className="stats-grid">
+              <div className="stat-card stat-card-combined">
+                <div className="stat-label">{t('stat.combined')}</div>
+                <div className="stat-combined-values">
+                  <div className="stat-combined-item">
+                    <div className="stat-value">{filteredRides.length}</div>
+                    <div className="stat-unit">{t('stat.unit.rides')}</div>
+                  </div>
+                  <div className="stat-combined-sep">·</div>
+                  <div className="stat-combined-item">
+                    <div className="stat-value">{climbCount}</div>
+                    <div className="stat-unit">{t('paesse.label')}</div>
+                  </div>
+                </div>
+              </div>
               {stats.map(c=>(
                 <div key={c.label} className="stat-card">
                   <div className="stat-label">{c.label}</div>
@@ -390,8 +395,18 @@ export default function Dashboard() {
               </div>
             </div>
 
+            <div className="view-tabs">
+              <button className={view==='rides'?'view-tab active':'view-tab'} onClick={()=>{setView('rides')}}>
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{marginRight:'5px',verticalAlign:'middle'}}><circle cx="5.5" cy="17.5" r="3"/><circle cx="18.5" cy="17.5" r="3"/><path d="M5.5 17.5l3.5-9h5l2.5 5H9M15 8.5l2 4.5"/><circle cx="14" cy="6" r="1" fill="currentColor" stroke="none"/></svg>
+                {t('rides.button')}
+              </button>
+              <button className={view==='paesse'?'view-tab active':'view-tab'} onClick={()=>setView('paesse')}>
+                ⛰ {t('paesse.label')}
+              </button>
+            </div>
+
             {view === 'rides' ? (<>
-              <div className="section-title">
+              <div className="section-title section-title-tabbed">
                 {selectedSports.length > 0
                   ? t('rides.title.filtered', { sports: selectedSports.map(sportLabel).join(', '), count: sortedRides.length })
                   : t('rides.title.all', { count: sortedRides.length })}
@@ -444,7 +459,7 @@ export default function Dashboard() {
                 })}
               </div>
             </>) : (<>
-              <div className="section-title" style={{display:'flex',alignItems:'center',gap:'12px'}}>
+              <div className="section-title section-title-tabbed" style={{display:'flex',alignItems:'center',gap:'12px'}}>
                 <span>{t('paesse.label')} — {climbCount}</span>
                 {user?.userId !== 'demo' && (
                   <div className="title-sync-wrap">
@@ -539,6 +554,45 @@ export default function Dashboard() {
         :root{--bg:#0a0a0a;--panel:#111;--border:#222;--accent:#e8ff47;--accent2:#ff6b35;--text:#f0f0f0;--muted:#555;--dim:#2a2a2a}
         body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh}
         @keyframes spin{to{transform:rotate(360deg)}}
+        @media(max-width:600px){
+          .delta{font-size:.42rem !important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+          .delta-abs{display:none !important}
+          /* Layout & spacing */
+          .wrap{padding:20px 16px !important}
+          .header{flex-direction:column !important;gap:10px !important;margin-bottom:24px !important}
+          .header-right{align-items:flex-start !important;width:100% !important;padding-top:0 !important}
+          .user-name,.user-sub{text-align:left !important}
+          .actions{justify-content:flex-start !important;flex-wrap:nowrap !important;gap:6px !important}
+          /* Stat cards 2×2 */
+          .stats-grid{grid-template-columns:repeat(2,1fr) !important;gap:8px !important;margin-bottom:20px !important}
+          .stat-card{padding:16px 12px !important}
+          .stat-value{font-size:clamp(1.6rem,8vw,2.2rem) !important}
+          .stat-label{font-size:.58rem !important}
+          /* Sport nav: horizontal scroll */
+          .sport-nav{flex-wrap:nowrap !important;overflow-x:auto !important;-webkit-overflow-scrolling:touch;scrollbar-width:none !important;padding-bottom:6px !important;margin-bottom:20px !important}
+          .sport-nav::-webkit-scrollbar{display:none !important}
+          .sp-btn{flex-shrink:0 !important}
+          .sp-right-group{flex-shrink:0 !important}
+          /* Year nav → dropdown */
+          .year-nav{display:none !important}
+          .year-select{display:block !important;font-family:'DM Mono',monospace;font-size:.8rem;padding:7px 12px;border-radius:4px;border:1px solid var(--border);background:var(--dim);color:var(--text);cursor:pointer;margin-bottom:16px;width:100%}
+          /* Chart */
+          .chart-box{padding:16px 12px 10px !important;margin-bottom:20px !important}
+          .bar-chart{height:90px !important;gap:2px !important}
+          .bar-month{font-size:.46rem !important;letter-spacing:0 !important}
+          /* Fahrten: name + dist only */
+          .rides-header,.ride-row{grid-template-columns:1fr 68px !important;padding:10px 14px !important}
+          .rides-header>*:nth-child(n+3),.ride-row>*:nth-child(n+3){display:none !important}
+          .ride-climb-row{padding-left:20px !important;gap:8px !important}
+          .ride-climb-type{display:none !important}
+          /* Pässe & Berge: name + count only */
+          .summit-header,.summit-row{grid-template-columns:1fr 52px !important;padding:10px 14px !important}
+          .summit-header>*:nth-child(n+3),.summit-row>*:nth-child(n+3){display:none !important}
+          .climb-ride-row{grid-template-columns:1fr 68px !important;padding-left:20px !important}
+          .climb-ride-row>*:nth-child(n+3){display:none !important}
+          /* Margins */
+          .rides-list{margin-bottom:20px !important}
+        }
       `}</style>
       <style jsx>{`
         .wrap{max-width:960px;margin:0 auto;padding:40px 24px;}
@@ -566,6 +620,7 @@ export default function Dashboard() {
         .empty p{margin-bottom:20px;font-size:.9rem}
         .btn{background:var(--accent);color:#000;border:none;border-radius:4px;padding:10px 20px;font-family:'DM Sans',sans-serif;font-weight:500;font-size:.85rem;cursor:pointer}
         .year-nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+        .year-select{display:none}
         .yr-btn{font-family:'DM Mono',monospace;font-size:.75rem;padding:6px 14px;border-radius:3px;border:1px solid var(--border);background:rgba(10,10,10,0.7);color:var(--muted);cursor:pointer;transition:all .15s}
         .yr-btn:hover{border-color:var(--accent);color:var(--accent)}
         .yr-btn.active{background:var(--accent);color:#000;border-color:var(--accent);font-weight:600}
@@ -624,6 +679,18 @@ export default function Dashboard() {
         .ride-val{font-family:'DM Mono',monospace;font-size:.78rem}
         .ride-type{font-family:'DM Mono',monospace;font-size:.62rem;padding:2px 7px;border-radius:2px;background:var(--dim);color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
         .sp-right-group{margin-left:auto;display:flex;gap:6px}
+        .stat-card-combined{grid-column:1/-1}
+        .stat-card:last-child:nth-child(even){grid-column:1/-1}
+        .stat-combined-values{display:flex;align-items:baseline;gap:16px;margin-top:4px}
+        .stat-combined-item{display:flex;flex-direction:column;gap:4px}
+        .stat-combined-sep{font-family:'DM Mono',monospace;font-size:1.2rem;color:var(--muted);align-self:center}
+        .view-tabs{display:flex;gap:0;margin-bottom:0}
+        .view-tab{font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.08em;text-transform:uppercase;padding:7px 14px;border:1px solid var(--border);background:var(--bg);color:var(--muted);cursor:pointer;border-radius:4px 4px 0 0;border-bottom-color:var(--border);margin-bottom:-1px;position:relative;z-index:1;transition:all .15s}
+        .view-tab:first-child{border-right:none}
+        .view-tab.active{background:var(--panel);color:var(--accent2);border-bottom-color:var(--panel)}
+        .view-tab:hover:not(.active){color:var(--text)}
+        .section-title-tabbed{background:var(--panel);border:1px solid var(--border);border-top:none;border-bottom:none;padding:10px 18px;margin-bottom:0;font-size:.62rem}
+        .rides-list{border-top:none}
         .title-sync-wrap{display:flex;align-items:center;gap:10px;margin-left:4px}
         .title-sync-btn{font-family:'DM Mono',monospace;font-size:.65rem;padding:3px 10px;border-radius:3px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap}
         .title-sync-btn:hover{border-color:#FC4C02;color:#FC4C02}
@@ -651,14 +718,6 @@ export default function Dashboard() {
         .strava-footer-link:hover{color:#FC4C02}
         .privacy-footer-link{font-family:'DM Mono',monospace;font-size:.72rem;color:#555;text-decoration:none;letter-spacing:.08em;text-transform:uppercase;transition:color .15s}
         .privacy-footer-link:hover{color:#888}
-        @media(max-width:600px){
-          .rides-header,.ride-row{grid-template-columns:1fr 80px 70px}
-          .rides-header>*:nth-child(4),.ride-row>*:nth-child(4),
-          .rides-header>*:nth-child(5),.ride-row>*:nth-child(5){display:none}
-          .bar-chart{height:100px}
-          .header-right{align-items:flex-start}
-          .user-name,.user-sub{text-align:left}
-        }
       `}</style>
     </>
   )
