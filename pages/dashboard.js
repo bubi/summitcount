@@ -652,12 +652,41 @@ export default function Dashboard() {
         .privacy-footer-link{font-family:'DM Mono',monospace;font-size:.72rem;color:#555;text-decoration:none;letter-spacing:.08em;text-transform:uppercase;transition:color .15s}
         .privacy-footer-link:hover{color:#888}
         @media(max-width:600px){
-          .rides-header,.ride-row{grid-template-columns:1fr 80px 70px}
-          .rides-header>*:nth-child(4),.ride-row>*:nth-child(4),
-          .rides-header>*:nth-child(5),.ride-row>*:nth-child(5){display:none}
-          .bar-chart{height:100px}
-          .header-right{align-items:flex-start}
+          /* Layout & spacing */
+          .wrap{padding:20px 16px}
+          .header{flex-direction:column;gap:10px;margin-bottom:24px}
+          .header-right{align-items:flex-start;width:100%;padding-top:0}
           .user-name,.user-sub{text-align:left}
+          .actions{justify-content:flex-start;flex-wrap:nowrap;gap:6px}
+          /* Stat cards: 2×2 grid */
+          .stats-grid{grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:20px}
+          .stat-card{padding:16px 12px}
+          .stat-value{font-size:clamp(1.6rem,8vw,2.2rem)}
+          .stat-label{font-size:.58rem}
+          /* Sport nav: horizontal scroll */
+          .sport-nav{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:6px;margin-bottom:20px}
+          .sport-nav::-webkit-scrollbar{display:none}
+          .sp-btn{flex-shrink:0}
+          .sp-right-group{flex-shrink:0}
+          /* Year nav */
+          .year-nav{gap:5px}
+          .yr-btn{padding:5px 10px;font-size:.7rem}
+          /* Chart */
+          .chart-box{padding:16px 12px 10px;margin-bottom:20px}
+          .bar-chart{height:90px;gap:2px}
+          .bar-month{font-size:.46rem;letter-spacing:0}
+          /* Fahrten table: name + dist only */
+          .rides-header,.ride-row{grid-template-columns:1fr 68px;padding:10px 14px}
+          .rides-header>*:nth-child(n+3),.ride-row>*:nth-child(n+3){display:none}
+          .ride-climb-row{padding-left:20px;gap:8px}
+          .ride-climb-type{display:none}
+          /* Pässe & Berge table: name + count only */
+          .summit-header,.summit-row{grid-template-columns:1fr 52px;padding:10px 14px}
+          .summit-header>*:nth-child(n+3),.summit-row>*:nth-child(n+3){display:none}
+          .climb-ride-row{grid-template-columns:1fr 68px;padding-left:20px}
+          .climb-ride-row>*:nth-child(n+3){display:none}
+          /* Lists margin */
+          .rides-list{margin-bottom:20px}
         }
       `}</style>
     </>
