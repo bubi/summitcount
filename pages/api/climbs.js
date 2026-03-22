@@ -62,7 +62,10 @@ export default async function handler(req, res) {
   if (session.demo) return res.json({ current: { total: 0, climbs: [] }, previous: { total: 0 } })
 
   const year = parseInt(req.query.year)
-  const db   = supabaseAdmin()
+  if (!year || year < 1900 || year > new Date().getFullYear() + 1) {
+    return res.status(400).json({ error: 'Invalid year' })
+  }
+  const db = supabaseAdmin()
 
   try {
     const [current, previous] = await Promise.all([
@@ -75,6 +78,6 @@ export default async function handler(req, res) {
     })
   } catch (e) {
     console.error('Climbs API error:', e)
-    res.status(500).json({ error: e.message })
+    res.status(500).json({ error: 'Internal server error' })
   }
 }

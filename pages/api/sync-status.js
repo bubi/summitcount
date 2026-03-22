@@ -26,6 +26,6 @@ export default async function handler(req, res) {
     res.json({ job })
   } catch (e) {
     console.error('Sync status error:', e)
-    res.status(500).json({ error: e.message })
+    res.status(500).json({ error: 'Internal server error' })
   }
 }

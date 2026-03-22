@@ -2,8 +2,15 @@ import { supabaseAdmin } from '../../../lib/supabase'
 import { getSession } from '../../../lib/session'
 
 export default async function handler(req, res) {
-  const { code, error } = req.query
+  const { code, error, state } = req.query
   if (error || !code) return res.redirect('/?error=access_denied')
+
+  // Validate CSRF state token
+  const session = await getSession(req, res)
+  if (!state || state !== session.oauthState) {
+    return res.redirect('/?error=invalid_state')
+  }
+  delete session.oauthState
 
   try {
     const tokenRes = await fetch('https://www.strava.com/oauth/token', {
@@ -17,7 +24,7 @@ export default async function handler(req, res) {
       }),
     })
     const tokenData = await tokenRes.json()
-    if (!tokenData.access_token) throw new Error(tokenData.message || 'Token exchange failed')
+    if (!tokenData.access_token) throw new Error('Token exchange failed')
 
     const { access_token, refresh_token, expires_at, athlete } = tokenData
 
@@ -42,7 +49,6 @@ export default async function handler(req, res) {
 
     if (upsertErr) throw upsertErr
 
-    const session = await getSession(req, res)
     session.userId     = user.id
     session.stravaId   = athlete.id
     session.firstname  = athlete.firstname
@@ -55,6 +61,6 @@ export default async function handler(req, res) {
     res.redirect('/dashboard')
   } catch (e) {
     console.error('Auth callback error:', e)
-    res.redirect(`/?error=${encodeURIComponent(e.message)}`)
+    res.redirect('/?error=auth_failed')
   }
 }

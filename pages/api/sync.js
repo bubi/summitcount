@@ -30,6 +30,6 @@ export default async function handler(req, res) {
     res.json({ status: job?.status || 'queued', jobId: job?.id })
   } catch (e) {
     console.error('Sync enqueue error:', e)
-    res.status(500).json({ error: e.message })
+    res.status(500).json({ error: 'Sync failed' })
   }
 }
