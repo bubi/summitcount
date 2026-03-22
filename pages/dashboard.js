@@ -326,6 +326,9 @@ export default function Dashboard() {
                 </button>
               ))}
             </div>
+            <select className="year-select" value={year} onChange={e=>{ setYear(Number(e.target.value)); setSelectedSports([]); }}>
+              {years.map(y=><option key={y} value={y}>{y}</option>)}
+            </select>
 
             <div className="sport-nav">
               <button className={view==='rides'&&selectedSports.length===0?'sp-btn active':'sp-btn'} onClick={()=>{setView('rides');setSelectedSports([])}}>{t('sport.all')}</button>
@@ -566,6 +569,7 @@ export default function Dashboard() {
         .empty p{margin-bottom:20px;font-size:.9rem}
         .btn{background:var(--accent);color:#000;border:none;border-radius:4px;padding:10px 20px;font-family:'DM Sans',sans-serif;font-weight:500;font-size:.85rem;cursor:pointer}
         .year-nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+        .year-select{display:none}
         .yr-btn{font-family:'DM Mono',monospace;font-size:.75rem;padding:6px 14px;border-radius:3px;border:1px solid var(--border);background:rgba(10,10,10,0.7);color:var(--muted);cursor:pointer;transition:all .15s}
         .yr-btn:hover{border-color:var(--accent);color:var(--accent)}
         .yr-btn.active{background:var(--accent);color:#000;border-color:var(--accent);font-weight:600}
@@ -668,9 +672,9 @@ export default function Dashboard() {
           .sport-nav::-webkit-scrollbar{display:none}
           .sp-btn{flex-shrink:0}
           .sp-right-group{flex-shrink:0}
-          /* Year nav */
-          .year-nav{gap:5px}
-          .yr-btn{padding:5px 10px;font-size:.7rem}
+          /* Year nav → dropdown on mobile */
+          .year-nav{display:none}
+          .year-select{display:block;font-family:'DM Mono',monospace;font-size:.8rem;padding:7px 12px;border-radius:4px;border:1px solid var(--border);background:var(--dim);color:var(--text);cursor:pointer;margin-bottom:16px;width:100%;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23888' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
           /* Chart */
           .chart-box{padding:16px 12px 10px;margin-bottom:20px}
           .bar-chart{height:90px;gap:2px}
