@@ -504,11 +504,11 @@ export default function Dashboard() {
             </>) : (<>
               <div className="section-title section-title-tabbed" style={{display:'flex',alignItems:'center',gap:'12px'}}>
                 <span>{t('paesse.label')} — {climbCount}</span>
-                {user?.userId !== 'demo' && (
+                {user?.userId !== 'demo' && (climbData.unsynced > 0 || titleSync.status !== 'idle') && (
                   <div className="title-sync-wrap">
                     {titleSync.status === 'idle' && (
                       <button className="title-sync-btn" onClick={doTitleSync}>
-                        ⛰ Sync
+                        ⛰ Sync ({climbData.unsynced})
                       </button>
                     )}
                     {titleSync.status === 'syncing' && (
