@@ -14,6 +14,6 @@ export default async function handler(req, res) {
     .eq('user_id', session.userId)
     .order('start_date', { ascending: false })
 
-  if (error) return res.status(500).json({ error: error.message })
+  if (error) { console.error('Activities error:', error); return res.status(500).json({ error: 'Internal server error' }) }
   res.json({ activities: data, count: data.length })
 }

@@ -9,8 +9,10 @@ export default async function handler(req, res) {
   if (!session.userId) return res.status(401).json({ error: 'Not logged in' })
   if (session.demo) return res.json({ status: 'completed', job: null })
 
-  const { year } = req.body
-  if (!year) return res.status(400).json({ error: 'year required' })
+  const year = parseInt(req.body.year)
+  if (!year || year < 1900 || year > new Date().getFullYear() + 1) {
+    return res.status(400).json({ error: 'Invalid year' })
+  }
 
   const db = supabaseAdmin()
 
@@ -21,6 +23,6 @@ export default async function handler(req, res) {
     res.json({ status: job.status, jobId: job.id })
   } catch (e) {
     console.error('Title sync enqueue error:', e)
-    res.status(500).json({ error: e.message })
+    res.status(500).json({ error: 'Title sync failed' })
   }
 }
