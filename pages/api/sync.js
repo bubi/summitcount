@@ -1,10 +1,7 @@
 import { supabaseAdmin } from '../../lib/supabase'
 import { getSession } from '../../lib/session'
 import { fetchActivitiesSince, fetchAllActivityIds, fetchActivity, refreshAccessToken } from '../../lib/strava'
-import { detectSummits } from '../../lib/summits'
 import { parseQualdichClimbs } from '../../lib/qualdich'
-
-const REAL_SPORT_TYPES = ['Ride','EBikeRide','GravelRide','MountainBikeRide','EMountainBikeRide']
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end()
@@ -107,29 +104,6 @@ export default async function handler(req, res) {
         await new Promise(r => setTimeout(r, 250))
       }
 
-      // Summit detection for real outdoor rides with GPS
-      const withPolyline = newActivities.filter(a =>
-        a.map?.summary_polyline && REAL_SPORT_TYPES.includes(a.sport_type || a.type)
-      )
-      if (withPolyline.length > 0) {
-        // Fetch activity IDs from DB (we need the UUID, not the Strava ID)
-        const stravaIds = withPolyline.map(a => String(a.id))
-        const { data: dbRows } = await db
-          .from('activities')
-          .select('id, strava_activity_id, start_date, summary_polyline, elev_high')
-          .in('strava_activity_id', stravaIds)
-
-        for (const dbRow of dbRows || []) {
-          if (!dbRow.summary_polyline) continue
-          try {
-            await detectSummits(dbRow.id, dbRow.summary_polyline, dbRow.start_date, dbRow.elev_high, db)
-          } catch (e) {
-            console.warn('Summit detection failed for', dbRow.id, e.message)
-          }
-          // Small pause to be kind to Overpass API
-          await new Promise(r => setTimeout(r, 500))
-        }
-      }
     }
 
     let deleted = 0

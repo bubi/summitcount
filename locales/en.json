@@ -24,6 +24,7 @@
   "stat.unit.rides": "Trips",
   "stat.avgSpeed": "Avg Speed",
   "stat.avgDistance": "Avg Distance",
+  "stat.avgElevation": "Avg Elevation",
   "stat.unit.km": "KM",
   "stat.unit.miles": "MILES",
   "stat.unit.meters": "METERS",
@@ -34,6 +35,8 @@
   "stat.unit.mph": "MPH",
   "stat.unit.kmRide": "KM / TRIP",
   "stat.unit.miRide": "MI / TRIP",
+  "stat.unit.metersRide": "M / RIDE",
+  "stat.unit.ftRide": "FT / RIDE",
 
   "chart.title": "Monthly Breakdown",
   "chart.tab.distance": "Distance",
