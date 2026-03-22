@@ -1,5 +1,6 @@
 import { supabaseAdmin } from '../../lib/supabase'
-import { refreshAccessToken, stravaGet } from '../../lib/strava'
+import { refreshAccessToken, stravaGet, fetchActivity } from '../../lib/strava'
+import { parseQualdichClimbs } from '../../lib/qualdich'
 
 // Strava sends a GET to verify the webhook endpoint
 // and a POST for each event (activity created/updated/deleted, athlete deauthorized)
@@ -91,12 +92,36 @@ async function handleActivityUpsert(db, userId, activityId, accessToken) {
       start_date:         a.start_date,
       distance_m:         a.distance || 0,
       elevation_gain_m:   a.total_elevation_gain || 0,
+      elev_high:          a.elev_high ?? null,
       moving_time_s:      a.moving_time || 0,
       year:               new Date(a.start_date).getFullYear(),
       month:              new Date(a.start_date).getMonth() + 1,
+      summary_polyline:   a.map?.summary_polyline || null,
+      description:        a.description || null,
     }, { onConflict: 'strava_activity_id' })
 
     console.log(`Activity ${activityId} upserted for user ${userId}`)
+
+    // Parse quäldich climbs from description
+    const climbs = parseQualdichClimbs(a.description || '')
+    if (climbs.length > 0) {
+      const { data: dbAct } = await db
+        .from('activities')
+        .select('id, start_date')
+        .eq('strava_activity_id', String(a.id))
+        .single()
+      if (dbAct) {
+        const climbRows = climbs.map(c => ({
+          activity_id: dbAct.id,
+          name:        c.name,
+          ele:         c.ele,
+          climb_type:  c.climb_type,
+          visited_at:  dbAct.start_date,
+        }))
+        await db.from('qualdich_climbs')
+          .upsert(climbRows, { onConflict: 'activity_id,name', ignoreDuplicates: false })
+      }
+    }
   } catch(e) {
     console.error(`Failed to upsert activity ${activityId}:`, e.message)
   }

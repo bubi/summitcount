@@ -24,6 +24,7 @@
   "stat.unit.rides": "Fahrten",
   "stat.avgSpeed": "Ø Geschwindigkeit",
   "stat.avgDistance": "Ø Distanz",
+  "stat.avgElevation": "Ø Höhenmeter",
   "stat.unit.km": "KM",
   "stat.unit.miles": "MILES",
   "stat.unit.meters": "METER",
@@ -34,6 +35,8 @@
   "stat.unit.mph": "MPH",
   "stat.unit.kmRide": "KM / FAHRT",
   "stat.unit.miRide": "MI / FAHRT",
+  "stat.unit.metersRide": "M / FAHRT",
+  "stat.unit.ftRide": "FT / FAHRT",
 
   "chart.title": "Monatsübersicht",
   "chart.tab.distance": "Distanz",

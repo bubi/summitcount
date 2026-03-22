@@ -55,7 +55,6 @@ export default function Dashboard() {
   const [chartMode, setChartMode]     = useState('dist')
   const [error, setError]             = useState('')
   const [loadStatus, setLoadStatus]   = useState('loading.init')
-  const [summitData, setSummitData]   = useState({ current: { total: 0, summits: [] }, previous: { total: 0 } })
   const [climbData, setClimbData]     = useState({ current: { total: 0, climbs: [] }, previous: { total: 0 } })
   const [view, setView]               = useState('rides') // 'rides' | 'paesse'
   const [titleSync, setTitleSync]     = useState({ status: 'idle', result: null })
@@ -63,7 +62,7 @@ export default function Dashboard() {
   const [expandedRide,  setExpandedRide]  = useState(null)
 
   useEffect(() => { init() }, [])
-  useEffect(() => { if (!loading) { fetchSummits(year); fetchClimbs(year) } }, [year, loading])
+  useEffect(() => { if (!loading) { fetchClimbs(year) } }, [year, loading])
   useEffect(() => { setTitleSync({ status: 'idle', result: null }) }, [year])
 
   async function doTitleSync() {
@@ -108,13 +107,6 @@ export default function Dashboard() {
     } catch {}
   }
 
-  async function fetchSummits(yr) {
-    try {
-      const res = await fetch(`/api/summits?year=${yr}`)
-      if (res.ok) setSummitData(await res.json())
-    } catch (_) {}
-  }
-
   async function doSync() {
     setSyncing(true)
     setError('')
@@ -132,7 +124,6 @@ export default function Dashboard() {
           setYear(prev => years.includes(prev) ? prev : years[0])
         }
       }
-      await fetchSummits(year)
     } catch(e) { setError(e.message) }
     setSyncing(false)
   }
@@ -170,10 +161,10 @@ export default function Dashboard() {
   const prevAvgDist   = prevFiltered.length>0 ? prevTotalDist/prevFiltered.length : 0
   const isMetric      = unit==='metric'
 
-  const summitCount     = summitData.current.total
-  const prevSummitCount = summitData.previous.total
   const climbCount      = climbData.current.total
   const prevClimbCount  = climbData.previous.total
+  const currAvgElev     = filteredRides.length>0 ? totalElev/filteredRides.length : 0
+  const prevAvgElev     = prevFiltered.length>0 ? prevTotalElev/prevFiltered.length : 0
 
   // Map: strava_activity_id → climbs for quick lookup in rides list
   const climbsByActivity = {}
@@ -201,6 +192,9 @@ export default function Dashboard() {
     { label: t('stat.avgDistance'),     value: filteredRides.length>0?fmtVal(currAvgDist,unit):'0', unit: isMetric?t('stat.unit.kmRide'):t('stat.unit.miRide'),
       delta: hasPrevYear&&prevAvgDist>0 ? calcDelta(currAvgDist,prevAvgDist) : null,
       formatAbs: v => fmtVal(v,unit)+(isMetric?' km':' mi') },
+    { label: t('stat.avgElevation'),    value: filteredRides.length>0?fmtElevV(currAvgElev,unit).toLocaleString():'0', unit: isMetric?t('stat.unit.metersRide'):t('stat.unit.ftRide'),
+      delta: hasPrevYear&&prevAvgElev>0 ? calcDelta(currAvgElev,prevAvgElev) : null,
+      formatAbs: v => fmtElevV(v,unit).toLocaleString()+(isMetric?' m':' ft') },
   ]
 
   const monthly = MONTHS.map((_,i) => {
