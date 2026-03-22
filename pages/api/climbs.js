@@ -68,13 +68,19 @@ export default async function handler(req, res) {
   const db = supabaseAdmin()
 
   try {
-    const [current, previous] = await Promise.all([
+    const [current, previous, unsyncedResult] = await Promise.all([
       getClimbsForYear(db, session.userId, year),
       getClimbsForYear(db, session.userId, year - 1),
+      db.from('activities')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', session.userId)
+        .eq('year', year)
+        .or('title_synced.is.null,title_synced.eq.false'),
     ])
     res.json({
       current:  { total: current.length, climbs: current },
       previous: { total: previous.length },
+      unsynced: unsyncedResult.count || 0,
     })
   } catch (e) {
     console.error('Climbs API error:', e)

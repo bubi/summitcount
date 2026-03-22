@@ -37,6 +37,7 @@ create table if not exists activities (
   month               integer,
   summary_polyline    text,
   description         text,
+  title_synced        boolean default false,
   created_at          timestamptz default now()
 );
 
